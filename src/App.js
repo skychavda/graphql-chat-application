@@ -57,17 +57,3 @@ class App extends Component {
 }
 
 export default App;
-
-
-
-// e => {
-//   if (e.key === 'Enter') {
-//     if (e.target.value === "") {
-//       this.setState({ error: 'error' });
-//     } else {
-//       e.preventDefault();
-//       joinUser({ variables: { newUser: e.target.value } });
-//       this.setState({ error: 'none', user: e.target.value, display: 'show' });
-//     }
-//   }
-// }
