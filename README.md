@@ -1,1 +1,1 @@
-# graphql-chat-application
+# react-apollo-subscription-component
