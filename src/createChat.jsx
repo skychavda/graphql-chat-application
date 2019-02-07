@@ -64,7 +64,6 @@ class CreateChat extends React.Component {
     }
 
     sendMessage(e, messagePost) {
-        alert(e.key)
         if (e.key === 'Enter') {
             if (e.target.value === "") {
                 this.setState({ error: 'error' });
