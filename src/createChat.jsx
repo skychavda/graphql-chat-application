@@ -1,5 +1,5 @@
 import React from "react";
-import { Query, Mutation, Subscription } from "react-apollo";
+import { Query, Mutation } from "react-apollo";
 import { gql } from "apollo-boost";
 
 const GET_CHAT = gql`
@@ -36,7 +36,7 @@ class CreateChat extends React.Component {
             receiver: '',
             UserID: '',
             error: 'none',
-            subscribedToNewLinks: false
+            subscribedToNewMessage: false
         }
         this.sendMessage = this.sendMessage.bind(this);
     }
@@ -49,7 +49,8 @@ class CreateChat extends React.Component {
         }
     }
 
-    _subscribeToNewLinks = subscribeToMore => {
+    // subsctiption when new message arrives
+    _subscribeToNewMessage = subscribeToMore => {
         subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
             variables: { chat_user_id: this.props.userId },
@@ -60,7 +61,7 @@ class CreateChat extends React.Component {
                 return prev.chats.push(newMessage);
             }
         })
-        this.setState({ subscribedToNewLinks: true })
+        this.setState({ subscribedToNewMessage: true })
     }
 
     sendMessage(e, messagePost) {
@@ -88,8 +89,8 @@ class CreateChat extends React.Component {
                             if (loading) return 'Loading..';
                             if (error) return `${error}`;
 
-                            if (!this.state.subscribedToNewLinks) {
-                                this._subscribeToNewLinks(subscribeToMore)
+                            if (!this.state.subscribedToNewMessage) {
+                                this._subscribeToNewMessage(subscribeToMore)
                             }
 
                             return data.chats.map((chat, i) => (

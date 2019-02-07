@@ -1,7 +1,6 @@
-.main-div-chat{
-    /* background-image: url(./background.png); */
-  }
-  
+body{
+  font-family: 'Open Sans', sans-serif;
+}  
   .add-user{
     border-radius: 4px;
     margin:20px 0 0 20px;
@@ -149,9 +148,9 @@
   .message div p {
     display: inline-block;
     margin: 0;
-    width: auto;
+    max-width: 144px;
     padding: 8px 10px 8px 10px;
-    background: #fff;
+    background:#e5e5ea;
     word-wrap: break-word;
     font-family: Monospace;
     border-radius: 3px;
@@ -166,7 +165,7 @@
     height: 0;
     border-style: solid;
     border-width: 8px 8px 8px 0;
-    border-color: transparent #fff transparent transparent;
+    border-color: transparent #e5e5ea transparent transparent;
   }
   
   .message.me div {
@@ -175,6 +174,8 @@
   }
   .message.me div p {
     float: right;
+    background-color: #0881fe;
+    color: #ffffff;
   }
   .message.me div:before {
     position: relative;
@@ -185,7 +186,7 @@
     height: 0;
     border-style: solid;
     border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent #fff;
+    border-color: transparent transparent transparent #0881fe;
   }
   
   .clicked{
