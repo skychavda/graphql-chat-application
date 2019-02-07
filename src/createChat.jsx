@@ -57,8 +57,6 @@ class CreateChat extends React.Component {
                 console.log(subscriptionData);
                 if (!subscriptionData) return prev;
                 const newMessage = subscriptionData.data.postMessage;
-                // console.log('Line ---- 86', newMessage);
-                // console.log('Line ---- 62', prev);
                 return prev.chats.push(newMessage);
             }
         })
