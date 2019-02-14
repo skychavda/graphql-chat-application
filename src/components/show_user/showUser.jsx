@@ -1,5 +1,5 @@
 import React from "react";
-import { Mutation, compose, graphql } from "react-apollo";
+import { Mutation, compose, graphql, withApollo } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
 
@@ -42,18 +42,19 @@ class ShowUser extends React.Component {
             display: 'hidden',
             triggerCreateChat: false,
             subscribedNewUser: false,
-            userActive: false
+            userActive: false,
+            userList: []
         }
         this.initializeChat = this.initializeChat.bind(this);
     }
 
     async initializeChat(name, userChat) {
         let result = await userChat({ variables: { senderName: this.props.user, receiverName: name } });
-        this.setState({ receiverName: name, userId: result.data.userChat.chatUserId, display: 'show', triggerCreateChat: true});
+        this.setState({ receiverName: name, userId: result.data.userChat.chatUserId, display: 'show', triggerCreateChat: true });
         this.disable = true;
     }
 
-    componentWillMount(){
+    componentWillMount() {
         this.props.data.subscribeToMore({
             document: USER_JOIN_SUBSCRIPTION,
             updateQuery: (prev, { subscriptionData }) => {
@@ -65,20 +66,44 @@ class ShowUser extends React.Component {
         this.setState({ subscribedNewUser: true })
     }
 
+    componentDidMount() {
+        this.fetchUserFromQuery();
+    }
+
+    fetchUserFromQuery = async () => {
+        const { client } = this.props;
+        const result = await client.query({
+            query: SHOW_USER,
+            variables: {
+                user: this.props.user
+            }
+        });
+
+        this.setState({ userList: result })
+        // if (this._isMounted) {
+        //     // Creating a deep copy since the value inside this have to be changed at later stage
+        //     // const projectsClone = cloneDeep(result.data.bestProjects);
+        //     this.setState({
+        //         popularProjectLists: projectsClone,
+        //     });
+        // }
+    }
+
     render() {
         const data = this.props.data;
         if (data.loading) { return 'Loading'; }
         if (data.error) { return `${data.error}` }
+        let list = this.state.userList;
         return (
             <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
                 <div className="display-user col-md-4 col-lg-3">
                     <div className="user-title">Welcome {this.props.user}</div>
-                    <SearchUser />
+                    <SearchUser userList={list}/>
                     <div className="user-list">
-                        {data.users.map(user => (
-                            <ul class="list">
-                                <li class="clearfix">
-                                    <div class="about">
+                        {list.data.users.map(user => (
+                            <ul className="list">
+                                <li className="clearfix">
+                                    <div className="about">
                                         <Mutation mutation={INITIAL_CHAT}>
                                             {userChat => (
                                                 <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
@@ -90,7 +115,7 @@ class ShowUser extends React.Component {
                         ))}
                     </div>
                 </div>
-                {this.state.triggerCreateChat && <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} hidden={this.state.display} />}
+                {this.state.triggerCreateChat && <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} />}
             </div>
         );
     }
@@ -98,4 +123,4 @@ class ShowUser extends React.Component {
 
 export default compose(
     graphql(INITIAL_CHAT, { name: 'intialChat' }),
-    graphql(SHOW_USER, { options: (props) => ({ variables: { user: props.user } }) }))(ShowUser);
+    graphql(SHOW_USER, { options: (props) => ({ variables: { user: props.user } }) }), withApollo)(ShowUser);

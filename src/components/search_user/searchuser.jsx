@@ -19,10 +19,13 @@ class SearchUser extends React.Component{
         }
     }
 
+    handleUserName(e){
+        this.setState({username: e.target.value})
+    }
+
     render(){
         return(
             <div>
-                
                 <input type="text" onChange={(e)=>this.handleUserName(e)}/>
             </div>
         );

@@ -112,7 +112,7 @@ class CreateChat extends React.Component {
                 </div>
                 <div className="msj-rta macro">
                     {data.chats.map((chat, i) => (
-                        <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")} >
+                        <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")}>
                             {console.log('Line ---- 123', chat.chatUserId + "===" + this.props.userId)}
                             <div key={chat.chatUserId}><span className="parser"><Parser data={chat.message} /></span></div>
                         </div>
