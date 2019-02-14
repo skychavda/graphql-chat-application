@@ -1,15 +1,15 @@
 import React from 'react';
-import {Query} from 'react-apollo';
-import {gql} from 'apollo-boost';
+// import {Query} from 'react-apollo';
+// import {gql} from 'apollo-boost';
 
-const USER = gql`
-    query ShowUser($user:String!){
-        users(userName: $user){
-            name
-            id
-        }
-    }
-`;
+// const USER = gql`
+//     query ShowUser($user:String!){
+//         users(userName: $user){
+//             name
+//             id
+//         }
+//     }
+// `;
 
 class SearchUser extends React.Component{
     constructor(props){

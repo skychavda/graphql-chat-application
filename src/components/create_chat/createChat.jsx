@@ -1,5 +1,5 @@
 import React from "react";
-import { Query, Mutation } from "react-apollo";
+import { Mutation, graphql, compose } from "react-apollo";
 import { gql } from "apollo-boost";
 import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
@@ -43,18 +43,17 @@ class CreateChat extends React.Component {
             error: 'none',
             subscribedToNewMessage: false,
             emojiShown: false,
-            text: ''
+            text: '',
+            userId: ''
         }
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
         this.handleCheckbox = this.handleCheckbox.bind(this);
     }
 
-
-    // subsctiption when new message arrives
-    _subscribeToNewMessage = subscribeToMore => {
-        console.log('Line ---- 56', this.props.userId);
-        subscribeToMore({
+    componentDidMount() {
+        console.log('Line ---- 54', this.props.userId);
+        this.props.data.subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
             variables: { chat_user_id: this.props.userId },
             updateQuery: (prev, { subscriptionData }) => {
@@ -101,6 +100,9 @@ class CreateChat extends React.Component {
     }
 
     render() {
+        const data = this.props.data;
+        if (data.loading) return 'Loading';
+        if (data.error) return `${data.error}`;
         return (
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
@@ -109,23 +111,12 @@ class CreateChat extends React.Component {
                     </div>
                 </div>
                 <div className="msj-rta macro">
-                    <Query query={GET_CHAT} variables={{ sender: this.props.senderName, receiver: this.props.receiverName }}>
-                        {({ loading, data, error, subscribeToMore }) => {
-                            if (loading) return 'Loading..';
-                            if (error) return `${error}`;
-
-                            if (!this.state.subscribedToNewMessage) {
-                                this._subscribeToNewMessage(subscribeToMore)
-                            }
-
-                            return data.chats.map((chat, i) => (
-                                <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")} >
-                                    {console.log('Line ---- 123',chat.chatUserId +"==="+ this.props.userId)}
-                                    <div key={chat.chatUserId}><span className="parser"><Parser data={chat.message} /></span></div>
-                                </div>
-                            ))
-                        }}
-                    </Query>
+                    {data.chats.map((chat, i) => (
+                        <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")} >
+                            {console.log('Line ---- 123', chat.chatUserId + "===" + this.props.userId)}
+                            <div key={chat.chatUserId}><span className="parser"><Parser data={chat.message} /></span></div>
+                        </div>
+                    ))}
                 </div>
 
                 <Mutation mutation={MESSAGE_POST}>
@@ -142,4 +133,6 @@ class CreateChat extends React.Component {
     }
 }
 
-export default CreateChat;
+export default compose(
+    graphql(MESSAGE_POST, { name: 'messagePost' }),
+    graphql(GET_CHAT, { options: (props) => ({ variables: { sender: props.senderName, receiver: props.receiverName } }) }))(CreateChat);

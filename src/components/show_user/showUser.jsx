@@ -1,5 +1,5 @@
 import React from "react";
-import { Query, Mutation } from "react-apollo";
+import { Mutation, compose, graphql } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
 
@@ -40,7 +40,7 @@ class ShowUser extends React.Component {
             receiverName: '',
             userId: '',
             display: 'hidden',
-            triggerSubscription: false,
+            triggerCreateChat: false,
             subscribedNewUser: false,
             userActive: false
         }
@@ -49,12 +49,12 @@ class ShowUser extends React.Component {
 
     async initializeChat(name, userChat) {
         let result = await userChat({ variables: { senderName: this.props.user, receiverName: name } });
-        this.setState({ receiverName: name, userId: result.data.userChat.chatUserId, display: 'show', triggerSubscription: true, userActive: true });
+        this.setState({ receiverName: name, userId: result.data.userChat.chatUserId, display: 'show', triggerCreateChat: true});
         this.disable = true;
     }
 
-    _subscribeNewUser = subscribeToMore => {
-        subscribeToMore({
+    componentWillMount(){
+        this.props.data.subscribeToMore({
             document: USER_JOIN_SUBSCRIPTION,
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData.data) return prev;
@@ -64,57 +64,38 @@ class ShowUser extends React.Component {
         })
         this.setState({ subscribedNewUser: true })
     }
+
     render() {
+        const data = this.props.data;
+        if (data.loading) { return 'Loading'; }
+        if (data.error) { return `${data.error}` }
         return (
             <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
                 <div className="display-user col-md-4 col-lg-3">
                     <div className="user-title">Welcome {this.props.user}</div>
-                    <SearchUser/>
+                    <SearchUser />
                     <div className="user-list">
-                        <Query query={SHOW_USER} variables={{ user: this.props.user }}>
-                            {({ loading, error, data, subscribeToMore }) => {
-                                if (loading) {
-                                    return <div>loading</div>
-                                }
-                                if (error) {
-                                    return `${error}`
-                                }
-
-                                if (!this.state.subscribedNewUser) {
-                                    this._subscribeNewUser(subscribeToMore)
-                                }
-                                
-                                if (this.state.receiverName === '') {
-                                    this.setState({ receiverName: data.users[0].name, userId: data.users[0].id });
-                                    // <Mutation mutation={INITIAL_CHAT}>
-                                    //     {(userChat) => this.initializeChat(data.users[0].name, userChat)}
-                                    // </Mutation>
-                                }
-                                return data.users.map(user => (
-                                    <ul class="list">
-                                        <li class="clearfix">
-                                            <div class="about">
-                                                <Mutation mutation={INITIAL_CHAT}>
-                                                    {userChat => (
-                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
-                                                    )}
-                                                </Mutation>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                ))
-                            }}
-                        </Query>
+                        {data.users.map(user => (
+                            <ul class="list">
+                                <li class="clearfix">
+                                    <div class="about">
+                                        <Mutation mutation={INITIAL_CHAT}>
+                                            {userChat => (
+                                                <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
+                                            )}
+                                        </Mutation>
+                                    </div>
+                                </li>
+                            </ul>
+                        ))}
                     </div>
                 </div>
-                {/* {this.props.user && <NewMessage receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} hidden={this.state.display} />} */}
-                {
-                    <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} hidden={this.state.display} />
-                }
-
+                {this.state.triggerCreateChat && <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} hidden={this.state.display} />}
             </div>
         );
     }
 }
 
-export default ShowUser;
+export default compose(
+    graphql(INITIAL_CHAT, { name: 'intialChat' }),
+    graphql(SHOW_USER, { options: (props) => ({ variables: { user: props.user } }) }))(ShowUser);
