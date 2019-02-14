@@ -1,0 +1,71 @@
+.row{
+  width: 95%;
+  margin: 3% auto 0 auto;
+  box-shadow: 0px 0px 10px #aaaaaa;
+}
+
+.display-user, .new-messages-box{
+    padding:0;
+  }
+
+  .user-title{
+    padding:10px;
+    background-color: #efefef;
+    color: #aaaaaa;
+    text-align: left;
+  }
+
+  .user-list,.new-message{
+    width: 100%;
+    float: left;
+  }
+
+  .user-list ul {
+    padding: 0;
+    list-style-type: none;
+    margin-bottom: 0;
+  }
+
+  .user-list .name {
+    padding-left: 8px;
+  }
+
+  .name{
+    margin: 0;
+    padding: 10px;
+    width: 100%;
+    height: 55px;
+    text-align: left;
+    float: left;
+    border-bottom: 1px solid #aaaaaa40;
+  }
+
+  .list:hover{
+    cursor: pointer;
+    background-color: #aaaaaa40;
+  }
+
+  .user-name-active{
+    background-color: #aaaaaa40;
+    color: #ffffff;
+  }
+  
+  .user-button{
+    text-align: right;
+    padding: 10px 20px;
+    background: transparent;
+    outline: 0;
+    margin:5px 0;
+    border: 1px solid #00ff00;
+    border-radius: 2px;
+    color: #117c1e;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .user-button:hover, .user-button:focus{
+    background-color: #117c1e;
+    border-color: #117c1e;
+    color: white;
+    transition: all .5s ease;
+  }

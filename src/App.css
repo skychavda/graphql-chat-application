@@ -21,174 +21,17 @@ body{
     left: 40%;
   }
   
-  .display-user{
-    margin:20px 0 0 20px;
-    width: 300px;
-    padding:0;
-    border-radius: 4px;
-    box-shadow: 0px 0px 10px #aaaaaa;
-  }
-  
-  .user-name{
-    margin:0;
-    padding: 10px;
-    width: 60%;
-    text-align: left;
-    float: left;
-  }
-  
-  .user-list{
-    overflow-y: scroll;
-    height: 600px;
-  }
-  
-  .user-button{
-    text-align: right;
-    padding: 10px 20px;
-    background: transparent;
-    outline: 0;
-    margin:5px 0;
-    border: 1px solid #00ff00;
-    border-radius: 2px;
-    color: #117c1e;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .user-button:hover, .user-button:focus{
-    background-color: #117c1e;
-    border-color: #117c1e;
-    color: white;
-    transition: all .5s ease;
-  }
-  
   .hidden{
     display: none;
-  }
-  
-  .user-title{
-    padding:10px;
-    background-color: #117c1e;
-    color: #ffffff;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    text-align: left;
-  }
-  
-  .chat-wrapper{
-    position: absolute;
-    bottom: 0!important;
-    right: 0!important;
-  }
-  
-  .frame{
-    width: 350px;
-    border-radius: 4px;
-    height: 500px;
-    overflow: hidden;
-    padding:0;
-  }
-  
-  .chat-header{
-    background: #aaa;
-    text-align: left;
-    padding: 10px;
-  }
-  
-  .text-bar{
-    background: #aaa;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    text-align: left;
   }
   
   input[type="text"]{
     width: 100%;
     padding: 10px 15px;
-    border-radius: 4px;
     outline: none;
     border:1px solid #bbb;
   }
-  
-  .user-enter-text{
-    width: 80%!important;
-  }
-  
-  .input-error{
-    border-color: #ff0000!important;
-    outline: none;
-    border-radius: 4px;
-    transition: all .5s ease-in;
-  }
-  
-  .message{
-    display: flex;
-    margin: 10px 0 0 10px;
-    min-height: 30px;
-    height: auto;
-    text-align: left;
-  }
-  
-  .msj-rta{
-    float:right;background:whitesmoke;
-    overflow-y: scroll; 
-    height: 410px;
-  }
-  
-  .macro{
-    margin-top:5px;width:85%;border-radius:5px;padding:5px;
-  }
-  
-  .message div {
-    display: block;
-    flex: 1;
-    order: 2;
-  }
-  .message div p {
-    display: inline-block;
-    margin: 0;
-    max-width: 144px;
-    padding: 8px 10px 8px 10px;
-    background:#e5e5ea;
-    word-wrap: break-word;
-    font-family: Monospace;
-    border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-  .message div:before {
-    position: relative;
-    float: left;
-    content: '';
-    margin: 7px 0 0 -8px;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 8px 8px 8px 0;
-    border-color: transparent #e5e5ea transparent transparent;
-  }
-  
-  .message.me div {
-    order: 1;
-    padding: 0 8px 0 0;
-  }
-  .message.me div p {
-    float: right;
-    background-color: #0881fe;
-    color: #ffffff;
-  }
-  .message.me div:before {
-    position: relative;
-    float: right;
-    content: '';
-    margin: 7px -8px 0 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent #0881fe;
-  }
-  
+
   .clicked{
     background-color: #117c1e;
     border-color: #117c1e;
@@ -199,3 +42,4 @@ body{
   .hidden{
     display: none;
   }
+  

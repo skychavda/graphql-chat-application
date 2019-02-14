@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import { Mutation } from "react-apollo";
 import gql from "graphql-tag";
+import 'mr-emoji/css/emoji-mart.css'
 
-import ShowUser from './showUser';
+import ShowUser from './components/show_user/showUser';
 
 const JOIN_USER = gql`
   mutation JoinUser($newUser:String!){
@@ -18,7 +19,8 @@ class App extends Component {
     this.state = {
       user: '',
       display: 'hidden',
-      error: 'none'
+      error: 'none',
+      triggerShowUser: false
     }
   }
 
@@ -29,7 +31,7 @@ class App extends Component {
       } else {
         joinUser({ variables: { newUser: e.target.value } });
         this.setState({ error: 'none' });
-        this.setState({ user: e.target.value, display: 'show' });
+        this.setState({ user: e.target.value, display: 'show', triggerShowUser: true });
         e.preventDefault();
       }
     }
@@ -50,7 +52,7 @@ class App extends Component {
             </Mutation>
           </div>
         </div>
-        <ShowUser user={user} hidden={this.state.display} />
+        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.display} />}
       </div >
     );
   }
