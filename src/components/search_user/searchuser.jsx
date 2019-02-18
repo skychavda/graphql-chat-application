@@ -1,32 +1,21 @@
 import React from 'react';
-// import {Query} from 'react-apollo';
-// import {gql} from 'apollo-boost';
 
-// const USER = gql`
-//     query ShowUser($user:String!){
-//         users(userName: $user){
-//             name
-//             id
-//         }
-//     }
-// `;
-
-class SearchUser extends React.Component{
-    constructor(props){
+class SearchUser extends React.Component {
+    constructor(props) {
         super(props);
-        this.state={
-            username: ''
+        this.state = {
+            filterUser: []
         }
     }
 
-    handleUserName(e){
-        this.setState({username: e.target.value})
+    handleUserName(e) {
+        this.props.onFilterUser(e.target.value);
     }
 
-    render(){
-        return(
+    render() {
+        return (
             <div>
-                <input type="text" onChange={(e)=>this.handleUserName(e)}/>
+                <input type="text" onChange={(e) => this.handleUserName(e)} />
             </div>
         );
     }

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Mutation } from "react-apollo";
+import { Mutation, graphql, compose } from "react-apollo";
 import gql from "graphql-tag";
 import 'mr-emoji/css/emoji-mart.css'
 
@@ -24,7 +24,7 @@ class App extends Component {
     }
   }
 
-  async enterUser(e,joinUser) {
+  async enterUser(e, joinUser) {
     if (e.key === 'Enter') {
       if (e.target.value === "") {
         this.setState({ error: 'error' });
@@ -47,7 +47,7 @@ class App extends Component {
             <p className="title">Enter name</p>
             <Mutation mutation={JOIN_USER}>
               {joinUser => (
-                <input type="text" placeholder="Enter name" onKeyPress={(e) => this.enterUser(e,joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
+                <input type="text" placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
               )}
             </Mutation>
           </div>
@@ -58,4 +58,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default compose(graphql(JOIN_USER, { name: 'joinUser' }))(App);

@@ -3,6 +3,7 @@ import { Mutation, graphql, compose } from "react-apollo";
 import { gql } from "apollo-boost";
 import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
+import ScrollToBottom from 'react-scroll-to-bottom';
 
 const GET_CHAT = gql`
     query GetChat($sender:String!,$receiver:String!){
@@ -45,14 +46,14 @@ class CreateChat extends React.Component {
             emojiShown: false,
             text: '',
             userId: ''
-        }
+        };
+        // this.messageInput = React.createRef();
+        this.scrollDown = React.createRef();
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
-        this.handleCheckbox = this.handleCheckbox.bind(this);
     }
 
     componentDidMount() {
-        console.log('Line ---- 54', this.props.userId);
         this.props.data.subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
             variables: { chat_user_id: this.props.userId },
@@ -62,7 +63,7 @@ class CreateChat extends React.Component {
                 return prev.chats.push(newMessage);
             }
         })
-        this.setState({ subscribedToNewMessage: true })
+        this.setState({ subscribedToNewMessage: true });
     }
 
     sendMessage(e, messagePost) {
@@ -77,10 +78,6 @@ class CreateChat extends React.Component {
         }
     }
 
-    handleCheckbox() {
-        this.setState({ checked: !this.state.checked });
-    }
-
     handleTextChange(e) {
         this.setState({ text: e.target.value });
     }
@@ -91,6 +88,7 @@ class CreateChat extends React.Component {
             text: this.state.text + emojis,
             emojiShown: !this.state.emojiShown
         });
+        this.messageInput.focus();
     }
 
     toogleEmojiState = () => {
@@ -110,19 +108,19 @@ class CreateChat extends React.Component {
                         <div className="chat-with">{this.props.receiverName}</div>
                     </div>
                 </div>
-                <div className="msj-rta macro">
+                <ScrollToBottom className="msj-rta macro">
                     {data.chats.map((chat, i) => (
                         <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")}>
-                            {console.log('Line ---- 123', chat.chatUserId + "===" + this.props.userId)}
-                            <div key={chat.chatUserId}><span className="parser"><Parser data={chat.message} /></span></div>
+                            <div key={chat.chatUserId}>
+                                <span className="parser"><Parser data={chat.message} /></span>
+                            </div>
                         </div>
                     ))}
-                </div>
-
+                </ScrollToBottom>
                 <Mutation mutation={MESSAGE_POST}>
                     {messagePost => (
                         <div className="text-bar">
-                            <input type="text" placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, messagePost)} className={(this.state.error === "none" ? "" : "input-error")} />
+                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, messagePost)} className={(this.state.error === "none" ? "" : "input-error")} />
                             <span id={this.state.emojiShown === false ? "show-emoji-no" : "show-emoji-yes"} onClick={this.toogleEmojiState}>{'😄'}</span>
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>

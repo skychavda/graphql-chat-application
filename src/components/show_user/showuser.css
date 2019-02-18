@@ -18,6 +18,7 @@
   .user-list,.new-message{
     width: 100%;
     float: left;
+    height: 605px;
   }
 
   .user-list ul {
@@ -33,7 +34,7 @@
   .name{
     margin: 0;
     padding: 10px;
-    width: 100%;
+    width: 85%;
     height: 55px;
     text-align: left;
     float: left;
@@ -46,8 +47,8 @@
   }
 
   .user-name-active{
-    background-color: #aaaaaa40;
-    color: #ffffff;
+    background-color: #81cc80;
+    color: #bbbbbb;
   }
   
   .user-button{

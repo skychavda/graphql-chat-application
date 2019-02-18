@@ -2,9 +2,11 @@ import React from "react";
 import { Mutation, compose, graphql, withApollo } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
+import {Scrollbars} from 'react-custom-scrollbars';
 
 import CreateChat from '../create_chat/createChat';
 import SearchUser from '../search_user/searchuser';
+import ProfileUser from '../profile_user/profileuser';
 // import NewMessage from '../newmessage';
 
 const SHOW_USER = gql`
@@ -36,16 +38,18 @@ const USER_JOIN_SUBSCRIPTION = gql`
 class ShowUser extends React.Component {
     constructor(props) {
         super(props);
+        this.messagesList = React.createRef();
         this.state = {
             receiverName: '',
             userId: '',
             display: 'hidden',
             triggerCreateChat: false,
             subscribedNewUser: false,
-            userActive: false,
-            userList: []
+            userList: [],
+            filterUserList: []
         }
         this.initializeChat = this.initializeChat.bind(this);
+        this.filterUser = this.filterUser.bind(this);
     }
 
     async initializeChat(name, userChat) {
@@ -54,19 +58,16 @@ class ShowUser extends React.Component {
         this.disable = true;
     }
 
-    componentWillMount() {
-        this.props.data.subscribeToMore({
-            document: USER_JOIN_SUBSCRIPTION,
-            updateQuery: (prev, { subscriptionData }) => {
-                if (!subscriptionData.data) return prev;
-                const newName = subscriptionData.data.userJoined;
-                return prev.users.push(newName);
-            }
-        })
-        this.setState({ subscribedNewUser: true })
-    }
-
     componentDidMount() {
+        // this.props.data.subscribeToMore({
+        //     document: USER_JOIN_SUBSCRIPTION,
+        //     updateQuery: (prev, { subscriptionData }) => {
+        //         if (!subscriptionData.data) return prev;
+        //         const newName = subscriptionData.data.userJoined;
+        //         return prev.users.push(newName);
+        //     }
+        // })
+        // this.setState({ subscribedNewUser: true });
         this.fetchUserFromQuery();
     }
 
@@ -78,41 +79,56 @@ class ShowUser extends React.Component {
                 user: this.props.user
             }
         });
+        this.setState({ userList: result.data.users, filterUserList: result.data.users })
+        this.props.data.subscribeToMore({
+            document: USER_JOIN_SUBSCRIPTION,
+            updateQuery: (prev, { subscriptionData }) => {
+                if (!subscriptionData.data) return prev;
+                const newName = subscriptionData.data.userJoined;
+                return prev.users.push(newName);
+            }
+        })
+        this.setState({ subscribedNewUser: true });
+    }
 
-        this.setState({ userList: result })
-        // if (this._isMounted) {
-        //     // Creating a deep copy since the value inside this have to be changed at later stage
-        //     // const projectsClone = cloneDeep(result.data.bestProjects);
-        //     this.setState({
-        //         popularProjectLists: projectsClone,
-        //     });
-        // }
+    filterUser(userName) {
+        let filterUserList = this.state.userList.filter((user) => {
+            return user.name.toLowerCase().includes(userName)
+        })
+        this.setState({ filterUserList: filterUserList })
     }
 
     render() {
+        window.HTMLElement.prototype.scrollIntoView = function () { };
         const data = this.props.data;
-        if (data.loading) { return 'Loading'; }
-        if (data.error) { return `${data.error}` }
-        let list = this.state.userList;
+        // if (data.loading) { return 'Loading'; }
+        // if (data.error) { return `${data.error}` }
+        let list = this.state.filterUserList;
         return (
             <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
                 <div className="display-user col-md-4 col-lg-3">
                     <div className="user-title">Welcome {this.props.user}</div>
-                    <SearchUser userList={list}/>
+                    <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
+                    
                     <div className="user-list">
-                        {list.data.users.map(user => (
-                            <ul className="list">
+                        <Scrollbars>
+                        {list.map(user => (
+                            <ul className="list" >
                                 <li className="clearfix">
                                     <div className="about">
                                         <Mutation mutation={INITIAL_CHAT}>
                                             {userChat => (
-                                                <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
+                                                <div className={user.name === this.state.receiverName ? "user-name-active" : ""}>
+                                                    <ProfileUser userName={user.name}/>
+                                                    <div className={"name " } key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
+                                                </div>
                                             )}
                                         </Mutation>
                                     </div>
                                 </li>
                             </ul>
                         ))}
+                        </Scrollbars>
                     </div>
                 </div>
                 {this.state.triggerCreateChat && <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} />}
