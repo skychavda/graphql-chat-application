@@ -30,7 +30,7 @@ const link = split(
 
 const client = new ApolloClient({ link, cache: new InMemoryCache(), queryDeduplication: false });
 
-ReactDOM.render(
+ReactDOM.render( 
   <ApolloProvider client={client}>
     <App />
   </ApolloProvider>,

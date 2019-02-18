@@ -2,7 +2,7 @@ import React from "react";
 import { Mutation, compose, graphql, withApollo } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
-import {Scrollbars} from 'react-custom-scrollbars';
+import { Scrollbars } from 'react-custom-scrollbars';
 
 import CreateChat from '../create_chat/createChat';
 import SearchUser from '../search_user/searchuser';
@@ -101,33 +101,33 @@ class ShowUser extends React.Component {
     render() {
         window.HTMLElement.prototype.scrollIntoView = function () { };
         const data = this.props.data;
-        // if (data.loading) { return 'Loading'; }
-        // if (data.error) { return `${data.error}` }
+        if (data.loading) { return 'Loading'; }
+        if (data.error) { return `${data.error}` }
         let list = this.state.filterUserList;
         return (
             <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
                 <div className="display-user col-md-4 col-lg-3">
                     <div className="user-title">Welcome {this.props.user}</div>
                     <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
-                    
+
                     <div className="user-list">
                         <Scrollbars>
-                        {list.map(user => (
-                            <ul className="list" >
-                                <li className="clearfix">
-                                    <div className="about">
-                                        <Mutation mutation={INITIAL_CHAT}>
-                                            {userChat => (
-                                                <div className={user.name === this.state.receiverName ? "user-name-active" : ""}>
-                                                    <ProfileUser userName={user.name}/>
-                                                    <div className={"name " } key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
-                                                </div>
-                                            )}
-                                        </Mutation>
-                                    </div>
-                                </li>
-                            </ul>
-                        ))}
+                            {list.map((user,i) => (
+                                <ul className="list" key={i} >
+                                    <li className={"clearfix "+(user.name === this.state.receiverName ? "user-name-active" : "")}>
+                                        <div className="about">
+                                            <Mutation mutation={INITIAL_CHAT}>
+                                                {userChat => (
+                                                    <div>
+                                                        <ProfileUser userName={user.name} />
+                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.name, userChat)}>{user.name}</div>
+                                                    </div>
+                                                )}
+                                            </Mutation>
+                                        </div>
+                                    </li>
+                                </ul>
+                            ))}
                         </Scrollbars>
                     </div>
                 </div>

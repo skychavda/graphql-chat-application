@@ -148,3 +148,25 @@
     right: 6px;
     cursor: pointer;
   }
+
+  .edit-menu ul{
+    list-style-type: none;
+    overflow: hidden;
+    margin-bottom: 0;
+    padding: 0;
+  }
+
+  .edit-menu ul li{
+    float: left;
+    padding: 10px;
+
+  }
+
+  .edit-menu{
+    position: absolute;
+    top: 0;
+  }
+
+  .display-none{
+    display: none;
+  }

@@ -17,7 +17,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      user: '',
+      user: 'Akash',
       display: 'hidden',
       error: 'none',
       triggerShowUser: false
@@ -42,12 +42,12 @@ class App extends Component {
     return (
       <div className="main-div-chat">
         <div className={"enter-user " + (this.state.display === "hidden" ? "" : "hidden")}>
-          <h3 style={{ margin: "20px 0 0 20px", textAlign: "center" }}>{"Welcome " + (user === "" ? "to chat application" : user)}</h3>
+          <h3 style={{ margin: "20px 0 0 20px", textAlign: "center" }}>{"Welcome to chat application"}</h3>
           <div className="add-user">
             <p className="title">Enter name</p>
             <Mutation mutation={JOIN_USER}>
               {joinUser => (
-                <input type="text" placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
+                <input type="text" value={this.state.user} placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
               )}
             </Mutation>
           </div>
