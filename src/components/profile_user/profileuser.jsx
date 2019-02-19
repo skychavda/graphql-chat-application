@@ -1,6 +1,8 @@
 import React from 'react';
 import './profileuser.css';
 
+let i=0;
+
 class ProfileUser extends React.Component {
     constructor(props) {
         super(props);
@@ -21,10 +23,15 @@ class ProfileUser extends React.Component {
     }
 
     getColor() {
-        const {length} = this.state.colors;
-        let randomNum = Math.floor(Math.random() * length);
-        let mColor = this.state.colors[randomNum];
-        return mColor;
+        const colors = this.state.colors;
+        while(i!==8){
+            const element = colors[i];
+            i++;
+            if(i===7){
+                i=0;
+            }
+            return element;
+        }
     }
 
     render() {

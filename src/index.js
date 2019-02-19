@@ -28,9 +28,20 @@ const link = split(
   httpLink
 );
 
+// const defaultOptions = {
+//   watchQuery: {
+//     fetchPolicy: 'network-only',
+//     errorPolicy: 'ignore',
+//   },
+//   query: {
+//     fetchPolicy: 'network-only',
+//     errorPolicy: 'all',
+//   },
+// }
+
 const client = new ApolloClient({ link, cache: new InMemoryCache(), queryDeduplication: false });
 
-ReactDOM.render( 
+ReactDOM.render(
   <ApolloProvider client={client}>
     <App />
   </ApolloProvider>,

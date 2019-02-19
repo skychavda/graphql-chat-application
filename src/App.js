@@ -17,7 +17,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      user: 'Akash',
+      user: '',
       display: 'hidden',
       error: 'none',
       triggerShowUser: false
@@ -47,7 +47,7 @@ class App extends Component {
             <p className="title">Enter name</p>
             <Mutation mutation={JOIN_USER}>
               {joinUser => (
-                <input type="text" value={this.state.user} placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
+                <input type="text"  placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
               )}
             </Mutation>
           </div>

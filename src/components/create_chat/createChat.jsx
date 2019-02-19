@@ -17,13 +17,18 @@ const GET_CHAT = gql`
 
 const MESSAGE_DELETE = gql`
     mutation MessageDelete($chatConversationId:ID!,$senderName:String!,$receiverName:String!){
-        messageDelete(chatConversationId:$chatConversationId,senderName:$senderName,receiverName:$receiverName){
-            chatConversationId
-            message
-            messageStatus
-            chatUserId
-        }
+        messageDelete(chatConversationId:$chatConversationId,senderName:$senderName,receiverName:$receiverName)
     }
+`;
+
+const MESSAGE_UPDATE = gql`
+mutation MessageUpdate($chatConversationId:ID!,$senderName:String!,$receiverName:String!,$message:String!){
+  messageUpdate(chatConversationId:$chatConversationId, senderName:$senderName, receiverName:$receiverName, message:$message, messageStatus:SEND){
+    chatConversationId
+    chatUserId
+    message
+  }
+}
 `;
 
 const MESSAGE_POST = gql`
@@ -68,7 +73,8 @@ class CreateChat extends React.Component {
             emojiShown: false,
             text: '',
             userId: '',
-            messages: []
+            messages: [],
+            updateMessage: false
         };
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
@@ -76,56 +82,48 @@ class CreateChat extends React.Component {
     }
 
     componentDidMount() {
-        console.log('Line ---- 78',"df");
         //subscription for add new message
         this.props.data.subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
             variables: { chat_user_id: this.props.userId },
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
+                const message = this.state.messages;
                 const newMessage = subscriptionData.data.postMessage;
-                return prev.chats.push(newMessage);
+                return message.push(newMessage);
             }
         })
 
         //subscription for delete message
         this.props.data.subscribeToMore({
             document: DELETE_MESSAGE_SUBSCRIPION,
-            variables: {chat_user_id: this.props.userId },
-            updateQuery: (prev, {subscriptionData})=>{
+            variables: { chat_user_id: this.props.userId },
+            updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
                 const messages = this.state.messages;
                 const newMessage = subscriptionData.data.deleteMessage;
-                console.log('Line ---- 95',newMessage);
-                let newMessages = messages.findIndex(this.filterDeletedMessage)
-                // return prev.chats.filter(newMessage.chatConversationId!==prev.chats.);
+                console.log('Line ---- 99', newMessage);
+                return messages.findIndex(this.filterDeletedMessage(newMessage))
             }
         })
         this.fetchMessageFromQuery();
     }
 
-    // static getDerivedStateFromProps(nextProps, state){
-    //     if(nextProps.userId !== state.userId && state.userId != ""){
-    //         fetchMessageFromQuery();
-    //     }
-    // }
-
-    componentWillReceiveProps(newProps){
-        if(newProps.userId !== this.state.userId && this.state.userId != ""){
+    componentDidUpdate(prev) {
+        if (this.props.receiverName !== prev.receiverName) {
             this.fetchMessageFromQuery();
         }
     }
 
-    
-
-    filterDeletedMessage(element){
+    filterDeletedMessage(element) {
         const messages = this.state.messages;
-        console.log('Line ---- 107',messages.chatConversationId===element.chatConversationId);
-        // if(messages.chatConversationId===element.chatConversationId){
-        //     messages.slice(element);
-        //     this.setState({messages: messages})
-        // }
-        // console.log('Line ---- 111',this.state.messages);
+        for (let i = 0; i < messages.length; i++) {
+            if (messages[i].chatConversationId === element.chatConversationId) {
+                messages.splice(i);
+                this.setState({ messages: messages.splice(element) });
+            }
+        }
+        return messages;
     }
 
     fetchMessageFromQuery = async () => {
@@ -137,7 +135,7 @@ class CreateChat extends React.Component {
                 sender: this.props.senderName, receiver: this.props.receiverName
             }
         });
-        console.log('Line ---- 110',result.data.chats);
+        // console.log('Line ---- 110',result.data.chats);
         let messages = this.state.messages.slice(0);
         messages = [];
         messages = result.data.chats;
@@ -158,7 +156,12 @@ class CreateChat extends React.Component {
 
     deleteMessage(e, messageDelete, chatConversationId) {
         e.preventDefault();
-        messageDelete({ variables: { chatConversationId: chatConversationId, senderName: this.props.senderName, receiverName: this.props.receiverName } })
+        const result = messageDelete({ variables: { chatConversationId: chatConversationId, senderName: this.props.senderName, receiverName: this.props.receiverName } })
+        console.log('Line ---- 160',result);
+    }
+
+    updateMessage(e, messageUpdate, chatConversationId) {
+        this.setState({ updateMessage: !this.state.updateMessage })
     }
 
     handleTextChange(e) {
@@ -194,15 +197,19 @@ class CreateChat extends React.Component {
                 </div>
                 <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative' }} key={i}>
                             <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")}>
                                 <div key={chat.chatUserId}>
-                                    <span className="parser"><Parser data={chat.message} /></span>
+                                    {this.state.updateMessage === true ? <input type="text" value={chat.message}/> : <span className="parser"><Parser data={chat.message} /></span>}
                                 </div>
                             </div>
                             <div className={(chat.chatUserId === this.props.userId ? "edit-menu" : "display-none")}>
                                 <ul>
-                                    <li>Edit</li>
+                                    {<Mutation mutation={MESSAGE_UPDATE}>
+                                        {messageUpdate => (
+                                            <li onClick={(e) => this.updateMessage(e, messageUpdate, chat.chatConversationId)}>Edit</li>
+                                        )}
+                                    </Mutation>}
                                     {
                                         <Mutation mutation={MESSAGE_DELETE}>
                                             {messageDelete => (
