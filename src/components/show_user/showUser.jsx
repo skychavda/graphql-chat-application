@@ -80,14 +80,14 @@ class ShowUser extends React.Component {
             }
         });
         this.setState({ userList: result.data.users, filterUserList: result.data.users })
-        this.props.data.subscribeToMore({
-            document: USER_JOIN_SUBSCRIPTION,
-            updateQuery: (prev, { subscriptionData }) => {
-                if (!subscriptionData.data) return prev;
-                const newName = subscriptionData.data.userJoined;
-                return prev.users.push(newName);
-            }
-        })
+        // this.props.data.subscribeToMore({
+        //     document: USER_JOIN_SUBSCRIPTION,
+        //     updateQuery: (prev, { subscriptionData }) => {
+        //         if (!subscriptionData.data) return prev;
+        //         const newName = subscriptionData.data.userJoined;
+        //         return prev.users.push(newName);
+        //     }
+        // })
         this.setState({ subscribedNewUser: true });
     }
 
@@ -96,6 +96,12 @@ class ShowUser extends React.Component {
             return user.name.toLowerCase().includes(userName)
         })
         this.setState({ filterUserList: filterUserList })
+    }
+
+    removeUser(e){
+        e.preventDefault();
+        // console.log('Line ---- 102',this.props.onRemoveUser);
+        this.props.onRemoveUser(e);
     }
 
     render() {
@@ -107,14 +113,17 @@ class ShowUser extends React.Component {
         return (
             <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
                 <div className="display-user col-md-4 col-lg-3">
-                    <div className="user-title">Welcome {this.props.user}</div>
+                    <div className="user-title">
+                        <p className="float-left">Welcome {this.props.user}</p>
+                        <button className="btn btn-outline-primary float-right btn-sm" onClick={(e)=>this.removeUser(e)}>Log out</button>
+                    </div>
                     <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
 
                     <div className="user-list">
                         <Scrollbars>
-                            {list.map((user,i) => (
+                            {list.map((user, i) => (
                                 <ul className="list" key={i} >
-                                    <li className={"clearfix "+(user.name === this.state.receiverName ? "user-name-active" : "")}>
+                                    <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
                                         <div className="about">
                                             <Mutation mutation={INITIAL_CHAT}>
                                                 {userChat => (

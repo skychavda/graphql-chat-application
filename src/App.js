@@ -1,9 +1,12 @@
 import React, { Component } from "react";
 import { Mutation, graphql, compose } from "react-apollo";
 import gql from "graphql-tag";
+import Cookies from 'universal-cookie';
 import 'mr-emoji/css/emoji-mart.css'
 
 import ShowUser from './components/show_user/showUser';
+
+const cookies = new Cookies();
 
 const JOIN_USER = gql`
   mutation JoinUser($newUser:String!){
@@ -22,6 +25,20 @@ class App extends Component {
       error: 'none',
       triggerShowUser: false
     }
+    this.removeUser = this.removeUser.bind(this);
+  }
+
+  componentDidMount(){
+    var user = cookies.get('loginUser');
+    console.log('Line ---- 33',cookies.get('loginUser'));
+    if(user!==undefined){
+      this.setState({ user: user, display: 'show', triggerShowUser: true });
+    }
+  }
+
+  removeUser(){
+    cookies.remove('loginUser');
+    this.setState({ user: '', display: 'hidden', triggerShowUser: false });
   }
 
   async enterUser(e, joinUser) {
@@ -32,6 +49,8 @@ class App extends Component {
         joinUser({ variables: { newUser: e.target.value } });
         this.setState({ error: 'none' });
         this.setState({ user: e.target.value, display: 'show', triggerShowUser: true });
+        cookies.set('loginUser', e.target.value);
+        console.log('Line ---- 39',cookies.get('loginUser'));
         e.preventDefault();
       }
     }
@@ -52,7 +71,7 @@ class App extends Component {
             </Mutation>
           </div>
         </div>
-        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.display} />}
+        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.display} onRemoveUser={this.removeUser}/>}
       </div >
     );
   }
