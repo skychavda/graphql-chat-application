@@ -93,10 +93,12 @@ class CreateChat extends React.Component {
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
         this.fetchMessageFromQuery = this.fetchMessageFromQuery.bind(this);
+        this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
     }
 
-    componentDidMount() {
-        //subscription for add new message
+    addNewMessageSubscription(){
+        console.log('Line ---- 108',this.props.userId);
+        //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
             variables: { chat_user_id: this.props.userId },
@@ -104,10 +106,20 @@ class CreateChat extends React.Component {
                 if (!subscriptionData) return prev;
                 const message = this.state.messages;
                 const newMessage = subscriptionData.data.postMessage;
-                console.log('Line ---- 108',newMessage);
-                return message.push(newMessage);
+                
+               // console.log('Line ---- 108',this.props.userId, newMessage);
+                message.push(newMessage);
+                this.setState({ message }, function(){
+                    //console.log('Line ---- 111',this.state.messages);
+                })
+                // return message.push(newMessage);
             }
         })
+    }
+
+    componentDidMount() {
+
+        this.addNewMessageSubscription();
 
         //subscription for delete message
         this.props.data.subscribeToMore({
@@ -116,14 +128,10 @@ class CreateChat extends React.Component {
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
                 const messages = this.state.messages;
-                // console.log('Line ---- 119',messages);
                 const newMessage = subscriptionData.data.deleteMessage;
-                // console.log('Line ---- 116',newMessage);
                 const deleteIndex = messages.findIndex(message => message.chatConversationId === newMessage.chatConversationId)
-                // console.log('Line ---- 118',deleteIndex);
                 if (deleteIndex > -1) {
                     messages.splice(deleteIndex,1);
-                    // console.log('Line ---- 120',messages.splice(deleteIndex,1));
                     this.setState({ messages });
                 }
             }
@@ -140,6 +148,7 @@ class CreateChat extends React.Component {
                 const updateIndex = messages.findIndex(message => message.chatConversationId === newMessage.chatConversationId)
                 if (updateIndex > -1) {
                     messages[updateIndex] = newMessage;
+                    console.log('Line ---- 140',messages);
                     this.setState({ messages });
                 }
             }
@@ -148,22 +157,12 @@ class CreateChat extends React.Component {
     }
 
     componentDidUpdate(prev) {
+        this.props.data.stopPolling();
         if (this.props.receiverName !== prev.receiverName) {
             this.fetchMessageFromQuery();
-            this.componentDidMount();
+            this.addNewMessageSubscription();
         }
     }
-
-    // filterDeletedMessage(element) {
-    //     const messages = this.state.messages;
-    //     for (let i = 0; i < messages.length; i++) {
-    //         if (messages[i].chatConversationId === element.chatConversationId) {
-    //             messages.splice(i);
-    //             this.setState({ messages: messages.splice(element) });
-    //         }
-    //     }
-    //     return messages;
-    // }
 
     fetchMessageFromQuery = async () => {
         const { client } = this.props;
@@ -243,7 +242,7 @@ class CreateChat extends React.Component {
             let disabledHover = this.disableHover(messages);
             disabledHover[foundIndex].isHover = true;
             this.setState({ messages: disabledHover });
-        }  
+        }
     }
 
     // set hover flag to false
@@ -252,16 +251,6 @@ class CreateChat extends React.Component {
             messages[i].isHover = false;
         }
         return messages
-    }
-
-    messageUnFoucused(chatConversationId){
-        const messages = this.state.messages.slice(0);
-        const foundIndex = messages.findIndex(message => message.chatConversationId === chatConversationId)
-        if (foundIndex > -1) {
-            let disabledChat = this.disableHover(messages);
-            disabledChat[foundIndex].isHover = false;
-            this.setState({ messages: disabledChat });
-        }
     }
 
     handleTextChange(e) {
@@ -298,7 +287,7 @@ class CreateChat extends React.Component {
                 <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
                         <div style={{ position: 'relative' }} key={i}>
-                            <div className={(chat.chatUserId === this.props.userId && chat.isHover === true ? "edit-menu" : "display-none")}>
+                            <div className={(chat.chatUserId === this.props.userId && chat.isHover === true? "edit-menu" : "display-none")}>
                                 <ul>
                                     <li onClick={() => this.selectMessage(chat.chatConversationId)}>Edit</li>
                                     {

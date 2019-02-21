@@ -59,15 +59,23 @@ class ShowUser extends React.Component {
     }
 
     componentDidMount() {
-        // this.props.data.subscribeToMore({
-        //     document: USER_JOIN_SUBSCRIPTION,
-        //     updateQuery: (prev, { subscriptionData }) => {
-        //         if (!subscriptionData.data) return prev;
-        //         const newName = subscriptionData.data.userJoined;
-        //         return prev.users.push(newName);
-        //     }
-        // })
-        // this.setState({ subscribedNewUser: true });
+        this.props.data.subscribeToMore({
+            document: USER_JOIN_SUBSCRIPTION,
+            updateQuery: (prev, { subscriptionData }) => {
+                if (!subscriptionData.data) return prev;
+                const userList = this.state.filterUserList;
+                const newName = subscriptionData.data.userJoined;
+                console.log('Line ---- 68',newName);
+                const userIndex = userList.findIndex(userList => userList.id === newName.id)
+                if(userIndex > -1){
+                    userList.push(newName)
+                    this.setState({userList})
+                }
+                console.log('Line ---- 90',userIndex);
+                // return prev.users.push(newName);
+            }
+        })
+        this.setState({ subscribedNewUser: true });
         this.fetchUserFromQuery();
     }
 
@@ -80,15 +88,6 @@ class ShowUser extends React.Component {
             }
         });
         this.setState({ userList: result.data.users, filterUserList: result.data.users })
-        // this.props.data.subscribeToMore({
-        //     document: USER_JOIN_SUBSCRIPTION,
-        //     updateQuery: (prev, { subscriptionData }) => {
-        //         if (!subscriptionData.data) return prev;
-        //         const newName = subscriptionData.data.userJoined;
-        //         return prev.users.push(newName);
-        //     }
-        // })
-        this.setState({ subscribedNewUser: true });
     }
 
     filterUser(userName) {

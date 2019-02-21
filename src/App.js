@@ -16,6 +16,15 @@ const JOIN_USER = gql`
   }
 `;
 
+const USER_JOIN_SUBSCRIPTION = gql`
+    subscription {
+        userJoined{
+            name
+            id
+        }
+    }
+`;
+
 class App extends Component {
   constructor(props) {
     super(props);
