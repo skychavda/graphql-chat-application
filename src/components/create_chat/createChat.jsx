@@ -96,8 +96,7 @@ class CreateChat extends React.Component {
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
     }
 
-    addNewMessageSubscription(){
-        console.log('Line ---- 108',this.props.userId);
+    addNewMessageSubscription = 
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_SUBSCRIPTION,
@@ -115,11 +114,10 @@ class CreateChat extends React.Component {
                 // return message.push(newMessage);
             }
         })
-    }
 
     componentDidMount() {
 
-        this.addNewMessageSubscription();
+        this.addNewMessageSubscription;
 
         //subscription for delete message
         this.props.data.subscribeToMore({
@@ -157,7 +155,7 @@ class CreateChat extends React.Component {
     }
 
     componentDidUpdate(prev) {
-        this.props.data.stopPolling();
+        // this.addNewMessageSubscription.unsubscribe();
         if (this.props.receiverName !== prev.receiverName) {
             this.fetchMessageFromQuery();
             this.addNewMessageSubscription();
