@@ -1,0 +1,35 @@
+.icon{
+    padding: 10px;
+    border: 1px solid #dfdfdf;
+    border-radius: 50%;
+    margin: auto 2px;
+}
+
+.icon:hover{
+    border-color: #ffffff;
+    background: #000000;
+    color: white;
+}
+
+.check-box{
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    float: right;
+    margin: 10px 2px;
+    border: 1px solid #cfcfcf;
+    transition: all .3s ease;
+}
+
+.arrow{
+    display: inline-block;
+    height: 20px;
+    width: 12px;
+    float: right;
+    margin: 10px 2px;
+    border: 1px solid #cfcfcf;
+    transform: rotate(33deg);
+    border-top: 0;
+    border-left: 0;
+    transition: all .3s ease;
+}

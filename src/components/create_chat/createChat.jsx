@@ -5,73 +5,151 @@ import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
 import ScrollToBottom from 'react-scroll-to-bottom';
 
+
+// New schema query
+
 const GET_CHAT = gql`
-    query GetChat($sender:String!,$receiver:String!){
-        chats(senderName:$sender,receiverName:$receiver){
+    query GetChat($chatRoomID:ID!, $memberID:ID!){
+        chatconversationByChatRoomId(chatRoomID:$chatRoomID,memberID:$memberID){
+            messageId
             message
-            chatUserId
-            chatConversationId
+            chatRoomID
+            senderID
+            sender{
+                id
+                userName
+                firstName
+            }
+            messageType
+            messageStatus
         }
     }
 `;
 
-const MESSAGE_DELETE = gql`
-    mutation MessageDelete($chatConversationId:ID!,$senderName:String!,$receiverName:String!){
-        messageDelete(chatConversationId:$chatConversationId,senderName:$senderName,receiverName:$receiverName){
-            chatConversationId
+const NEW_MESSAGE = gql`
+    mutation newMessage($chatRoomID:ID!,$senderID:ID!,$message:String!,$messageType:MessageType!,$messageStatus:State!){
+        newMessage(input:{
+            chatRoomID:$chatRoomID,
+            senderID:$senderID,
+            message:$message,
+            messageType:$messageType,
+            messageStatus:$messageStatus}){
+            messageId
+            chatRoomID
+            senderID
+            sender{
+                id
+                userName
+                firstName
+            }
             message
-            chatUserId
+            messageType
+            messageStatus
+            messageParentId
+            createdAt
         }
     }
 `;
 
-const MESSAGE_UPDATE = gql`
-mutation MessageUpdate($chatConversationId:ID!,$senderName:String!,$receiverName:String!,$message:String!,$messageStatus:State!){
-  messageUpdate(chatConversationId:$chatConversationId, senderName:$senderName, receiverName:$receiverName, message:$message, messageStatus:$messageStatus){
-    chatConversationId
-    chatUserId
-    message
-  }
-}
-`;
-
-const MESSAGE_POST = gql`
-    mutation MessagePost($messages:String!,$senderName:String!,$receiverName:String!){
-        messagePost(message:$messages,senderName:$senderName,receiverName:$receiverName,messageStatus:SEND){
-            message
+const MESSAGE_POST_SUBSCRIPTION = gql`
+    subscription messagePost($chatRoomID:ID!){
+        messagePost(chatRoomID:$chatRoomID){
+        messageId
+        sender{
+            id 
+            userName
+            firstName
+            lastName
+        }
+        message
+        messageType
+        messageStatus
         }
     }
 `;
 
-const MESSAGE_SUBSCRIPTION = gql`
-    subscription MessageSubscription($chat_user_id:ID!){
-        postMessage(chatUserId: $chat_user_id){
+const UPDATE_MESSAGE = gql`
+    mutation updateMessage($message:String!, $senderID:ID!, $messageID:ID!, $chatRoomID:ID!){
+        updateMessage(input:{
+            message:$message,
+            senderID:$senderID,
+            messageID:$messageID,
+            chatRoomID:$chatRoomID
+        }){
+            messageId
             message
-            chatUserId
-            chatConversationId
+            sender{
+                id
+                userName
+                firstName
+                lastName
+            }
+            chatRoomID
+            senderID
+            messageStatus
+            messageType
         }
     }
 `;
 
 const UPDATE_MESSAGE_SUBSCRIPTION = gql`
-subscription UpdateMessageSubscription($chat_user_id:ID!){
-    updateMessage(chatUserId:$chat_user_id){
-      message
-      chatUserId
-      chatConversationId
-    }
-  }
-`;
-
-const DELETE_MESSAGE_SUBSCRIPION = gql`
-    subscription DeleteMessageSubscription($chat_user_id:ID!){
-        deleteMessage(chatUserId:$chat_user_id){
-            chatUserId
+    subscription messageUpdate($chatRoomID:ID!){
+        messageUpdate(chatRoomID:$chatRoomID){
+            messageId
+            chatRoomID
+            senderID
+            sender{
+                id
+                userName
+            }
             message
-            chatConversationId
+            messageType
+            messageStatus
         }
     }
 `;
+
+const DELETE_MESSAGE = gql`
+    mutation deleteMessage($deleteByID:ID!, $messageID:ID!, $chatRoomID:ID!){
+        deleteMessage(input:{
+            chatRoomID:$chatRoomID,
+            messageID:$messageID,
+            DeleteByID:$deleteByID
+        }){
+            messageId
+            message
+            sender{
+                id
+                userName
+                firstName
+                lastName
+            }
+            chatRoomID
+            senderID
+            messageStatus
+            messageType
+        }
+    }
+`;
+
+const DELETE_MESSAGE_SUBSCRIPTION = gql`
+    subscription messageDelete($chatRoomID:ID!){
+        messageDelete(chatRoomID:$chatRoomID){
+            messageId
+            chatRoomID
+            senderID
+            sender{
+                id
+                userName
+            }
+            message
+            messageType
+            messageStatus
+        }
+    }
+`;
+
+//
 
 const EmojiTable = (onClickEmoji) => {
     return (<div className="emoji-table">
@@ -86,7 +164,7 @@ class CreateChat extends React.Component {
             error: 'none',
             emojiShown: false,
             text: '',
-            userId: '',
+            senderID: '',
             messages: [],
             chatConversationId: ''
         };
@@ -96,22 +174,17 @@ class CreateChat extends React.Component {
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
     }
 
-    addNewMessageSubscription = 
+    addNewMessageSubscription =
         //subscription for add new message  
         this.props.data.subscribeToMore({
-            document: MESSAGE_SUBSCRIPTION,
-            variables: { chat_user_id: this.props.userId },
+            document: MESSAGE_POST_SUBSCRIPTION,
+            variables: { chatRoomID: this.props.chatRoomID },
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
                 const message = this.state.messages;
-                const newMessage = subscriptionData.data.postMessage;
-                
-               // console.log('Line ---- 108',this.props.userId, newMessage);
+                const newMessage = subscriptionData.data.messagePost;
                 message.push(newMessage);
-                this.setState({ message }, function(){
-                    //console.log('Line ---- 111',this.state.messages);
-                })
-                // return message.push(newMessage);
+                this.setState({ message });
             }
         })
 
@@ -121,15 +194,15 @@ class CreateChat extends React.Component {
 
         //subscription for delete message
         this.props.data.subscribeToMore({
-            document: DELETE_MESSAGE_SUBSCRIPION,
-            variables: { chat_user_id: this.props.userId },
+            document: DELETE_MESSAGE_SUBSCRIPTION,
+            variables: { chatRoomID: this.props.chatRoomID },
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
                 const messages = this.state.messages;
-                const newMessage = subscriptionData.data.deleteMessage;
-                const deleteIndex = messages.findIndex(message => message.chatConversationId === newMessage.chatConversationId)
+                const newMessage = subscriptionData.data.messageDelete;
+                const deleteIndex = messages.findIndex(message => message.messageId === newMessage.messageId)
                 if (deleteIndex > -1) {
-                    messages.splice(deleteIndex,1);
+                    messages.splice(deleteIndex, 1);
                     this.setState({ messages });
                 }
             }
@@ -138,15 +211,14 @@ class CreateChat extends React.Component {
         //subscription for update message
         this.props.data.subscribeToMore({
             document: UPDATE_MESSAGE_SUBSCRIPTION,
-            variables: { chat_user_id: this.props.userId },
+            variables: { chatRoomID: this.props.chatRoomID },
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
-                const newMessage = subscriptionData.data.updateMessage;
+                const newMessage = subscriptionData.data.messageUpdate;
                 const messages = this.state.messages.slice(0);
-                const updateIndex = messages.findIndex(message => message.chatConversationId === newMessage.chatConversationId)
+                const updateIndex = messages.findIndex(message => message.messageId === newMessage.messageId)
                 if (updateIndex > -1) {
                     messages[updateIndex] = newMessage;
-                    console.log('Line ---- 140',messages);
                     this.setState({ messages });
                 }
             }
@@ -156,7 +228,7 @@ class CreateChat extends React.Component {
 
     componentDidUpdate(prev) {
         // this.addNewMessageSubscription.unsubscribe();
-        if (this.props.receiverName !== prev.receiverName) {
+        if (this.props.chatRoomID !== prev.chatRoomID) {
             this.fetchMessageFromQuery();
             this.addNewMessageSubscription();
         }
@@ -168,44 +240,43 @@ class CreateChat extends React.Component {
         const result = await client.query({
             query: GET_CHAT,
             variables: {
-                sender: this.props.senderName, receiver: this.props.receiverName
+                chatRoomID: this.props.chatRoomID, memberID: this.props.memberID
             }
         });
         // console.log('Line ---- 110',result.data.chats);
         let messages = this.state.messages.slice(0);
         messages = [];
-        let mainChat = result.data.chats;
+        let mainChat = result.data.chatconversationByChatRoomId;
         mainChat.map(function (x) {
             x.isEditMode = false;
             x.isHover = false;
             return x
         });
-        messages = result.data.chats;
-        console.log('Line ---- 195',messages);
-        this.setState({ messages, userId: this.props.userId })
+        messages = result.data.chatconversationByChatRoomId;
+        this.setState({ messages, senderID: this.props.memberID })
     }
 
-    sendMessage(e, messagePost) {
+    sendMessage(e, newMessage) {
         if (e.key === 'Enter') {
             if (e.target.value === "") {
                 this.setState({ error: 'error' });
             } else {
-                messagePost({ variables: { messages: this.state.text, senderName: this.props.senderName, receiverName: this.props.receiverName } });
+                newMessage({ variables: { chatRoomID: this.props.chatRoomID, senderID: this.props.memberID, message: this.state.text, messageType: 'TEXT', messageStatus: 'SEND' } });
                 e.target.value = "";
                 this.setState({ error: 'none', text: '' });
             }
         }
     }
 
-    deleteMessage(e, messageDelete, chatConversationId) {
+    deleteMessage(e, deleteMessage, messageId) {
         e.preventDefault();
-        messageDelete({ variables: { chatConversationId: chatConversationId, senderName: this.props.senderName, receiverName: this.props.receiverName } });
+        deleteMessage({ variables: { deleteByID:this.props.memberID, messageID:messageId, chatRoomID:this.props.chatRoomID } });
     }
 
     // select message when user click on edit 
-    selectMessage(chatConversationId) {
+    selectMessage(messageId) {
         const messages = this.state.messages.slice(0);
-        const foundIndex = messages.findIndex(message => message.chatConversationId === chatConversationId)
+        const foundIndex = messages.findIndex(message => message.messageId === messageId)
         if (foundIndex > -1) {
             let disabledChat = this.disableEditMode(messages);
             disabledChat[foundIndex].isEditMode = true;
@@ -213,12 +284,12 @@ class CreateChat extends React.Component {
         }
     }
 
-    updateMessage(e, messageUpdate, chatConversationId) {
+    updateMessage(e, messageUpdate, messageId) {
         if (e.key === 'Enter') {
             if (e.target.value === "") {
                 this.setState({ error: 'error' });
             } else {
-                messageUpdate({ variables: { chatConversationId: chatConversationId, senderName: this.props.senderName, receiverName: this.props.receiverName, message: e.target.value, messageStatus: 'SEND' } });
+                messageUpdate({ variables: { message: e.target.value, senderID: this.props.memberID, messageID: messageId, chatRoomID: this.props.chatRoomID } });
                 this.setState({ error: 'none', updateMessage: false });
             }
         }
@@ -233,9 +304,9 @@ class CreateChat extends React.Component {
     }
 
     // get message which is hover and set hover flag to true
-    messageFoucused(chatConversationId){
+    messageFoucused(messageId) {
         const messages = this.state.messages.slice(0);
-        const foundIndex = messages.findIndex(message => message.chatConversationId === chatConversationId)
+        const foundIndex = messages.findIndex(message => message.messageId === messageId)
         if (foundIndex > -1) {
             let disabledHover = this.disableHover(messages);
             disabledHover[foundIndex].isHover = true;
@@ -244,7 +315,7 @@ class CreateChat extends React.Component {
     }
 
     // set hover flag to false
-    disableHover(messages){
+    disableHover(messages) {
         for (let i = 0; i < messages.length; i++) {
             messages[i].isHover = false;
         }
@@ -285,23 +356,23 @@ class CreateChat extends React.Component {
                 <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
                         <div style={{ position: 'relative' }} key={i}>
-                            <div className={(chat.chatUserId === this.props.userId && chat.isHover === true? "edit-menu" : "display-none")}>
+                            <div className={(chat.sender.id === this.props.memberID && chat.isHover === true ? "edit-menu" : "display-none")}>
                                 <ul>
-                                    <li onClick={() => this.selectMessage(chat.chatConversationId)}>Edit</li>
+                                    <li onClick={() => this.selectMessage(chat.messageId)}>Edit</li>
                                     {
-                                        <Mutation mutation={MESSAGE_DELETE}>
-                                            {messageDelete => (
-                                                <li onClick={(e) => this.deleteMessage(e, messageDelete, chat.chatConversationId)}>Delete</li>
+                                        <Mutation mutation={DELETE_MESSAGE}>
+                                            {deleteMessage => (
+                                                <li onClick={(e) => this.deleteMessage(e, deleteMessage, chat.messageId)}>Delete</li>
                                             )}
                                         </Mutation>
                                     }
                                 </ul>
                             </div>
-                            <div key={i} className={"message " + (chat.chatUserId === this.props.userId ? "me" : "")}>
+                            <div key={i} className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")}>
                                 <div key={chat.chatUserId}>
-                                    {<Mutation mutation={MESSAGE_UPDATE}>
-                                        {messageUpdate => (
-                                            chat.isEditMode === true ? <input type="text" className="edit-text" onKeyPress={(e) => this.updateMessage(e, messageUpdate, chat.chatConversationId)} /> : <span className="parser" onMouseEnter={()=>this.messageFoucused(chat.chatConversationId)}><Parser data={chat.message} /></span>
+                                    {<Mutation mutation={UPDATE_MESSAGE}>
+                                        {updateMessage => (
+                                            chat.isEditMode === true ? <input type="text" className="edit-text" onKeyPress={(e) => this.updateMessage(e, updateMessage, chat.messageId)} /> : <span className="parser" onMouseEnter={() => this.messageFoucused(chat.messageId)}><Parser data={chat.message} /></span>
                                         )}
                                     </Mutation>}
                                 </div>
@@ -309,10 +380,10 @@ class CreateChat extends React.Component {
                         </div>
                     ))}
                 </ScrollToBottom>
-                <Mutation mutation={MESSAGE_POST}>
-                    {messagePost => (
+                <Mutation mutation={NEW_MESSAGE}>
+                    {newMessage => (
                         <div className="text-bar">
-                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, messagePost)} className={(this.state.error === "none" ? "" : "input-error")} />
+                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={(this.state.error === "none" ? "" : "input-error")} />
                             <span id={this.state.emojiShown === false ? "show-emoji-no" : "show-emoji-yes"} onClick={this.toogleEmojiState}>{'😄'}</span>
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>
@@ -324,7 +395,7 @@ class CreateChat extends React.Component {
 }
 
 export default compose(
-    graphql(MESSAGE_POST, { name: 'messagePost' }),
-    graphql(MESSAGE_DELETE, { name: 'messageDelete' }),
-    graphql(MESSAGE_UPDATE, { name: 'messageUpdate' }),
-    graphql(GET_CHAT, { options: (props) => ({ variables: { sender: props.senderName, receiver: props.receiverName } }) }), withApollo)(CreateChat);
+    graphql(NEW_MESSAGE, { name: 'newMessage' }),
+    graphql(DELETE_MESSAGE, { name: 'deleteMessage' }),
+    graphql(UPDATE_MESSAGE, { name: 'updateMessage' }),
+    graphql(GET_CHAT, { options: (props) => ({ variables: { chatRoomID: props.chatRoomID, memberID: props.memberID } }) }), withApollo)(CreateChat);

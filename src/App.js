@@ -56,6 +56,7 @@ class App extends Component {
       displayLogin: 'hidden',
       displaySignup: 'hidden',
       displayShowUser: 'hidden',
+      displayContainer: 'show',
       error: 'none',
       triggerShowUser: false,
       userName: '',
@@ -79,7 +80,7 @@ class App extends Component {
     var user = cookies.get('loginUser');
     console.log('Line ---- 33', cookies.get('loginUser'));
     if (user !== undefined) {
-      this.setState({ user: user, displayShowUser: 'show', triggerShowUser: true, displayLogin:'show' });
+      this.setState({ user: user, displayShowUser: 'show', triggerShowUser: true, displayLogin:'show', displayContainer: 'hidden' });
     }
   }
 
@@ -112,14 +113,14 @@ class App extends Component {
     const bio = this.state.bio;
 
     newUser({ variables: { userName: userName, firstName: firstName, lastName: lastName, email: email, contact: number, bio: bio } });
-    this.setState({ user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: 'show' });
+    this.setState({ user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: 'show', displayContainer: 'hidden' });
     e.preventDefault();
   }
 
   async login(e) {
     const userName = this.state.userName;
     cookies.set('loginUser', userName);
-    this.setState({ user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: 'show' });
+    this.setState({ user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: 'show', displayContainer: 'hidden' });
     console.log('Line ---- 123',cookies.get('loginUser'));
     e.preventDefault();
   }
@@ -154,11 +155,11 @@ class App extends Component {
 
   render() {
     const user = this.state.user;
-    console.log('Line ---- 76', this.state.userName);
+    console.log('Line ---- 76', this.state.user);
     return (
       <div className="main-div-chat">
-        <div className={"container-login100 "}>
-          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displaySignup === "show" ? "" : "hidden")}>
+        <div className={"container-login100 "+ (this.state.displayContainer === "show" ? "" : "hidden")}>
+          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 "+(this.state.displaySignup === "show" ? "" : "hidden")}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Welcome to chat application
@@ -199,7 +200,6 @@ class App extends Component {
                   <div className="login100-form-bgbtn"></div>
                   <Mutation mutation={NEW_USER}>
                     {newUser => (
-                      // <input type="text" placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
                       <button className="login100-form-btn" onClick={(e) => this.newUser(e, newUser)}>
                         Join Chat
 							        </button>
@@ -211,14 +211,6 @@ class App extends Component {
               {/* <h6 onClick={this.alreadyMember}>Login</h6> */}
             </div>
           </div>
-          {/* <div className="add-user">
-            <p className="title">Enter name</p>
-            <Mutation mutation={JOIN_USER}>
-              {joinUser => (
-                <input type="text" placeholder="Enter name" onKeyPress={(e) => this.enterUser(e, joinUser)} className={"user-enter-text " + (this.state.error === "none" ? "" : "input-error")} />
-              )}
-            </Mutation>
-          </div> */}
           <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displayLogin === "hidden" ? "" : "hidden")}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
@@ -235,16 +227,14 @@ class App extends Component {
                   <div className="login100-form-bgbtn"></div>
                   <button className="login100-form-btn" onClick={(e) => this.login(e)}>
                     Login
-							          </button>
+							    </button>
                 </div>
               </div>
               <h6 onClick={this.handleNotAMember}>Not a member?</h6>
             </div>
           </div>
-          {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} />}
-          {/* className={(this.state.display === "show" ? "" : "hidden")} */}
-          {/* {this.state.display === 'show' && <Login/>} */}
         </div >
+        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} />}
       </div>
     );
   }

@@ -21,19 +21,30 @@ const SHOW_USER = gql`
   }
 `;
 
-const INITIAL_CHAT = gql`
-    mutation InitializeChat($senderName:String!,$receiverName:String!){
-        userChat(senderName:$senderName,receiverName:$receiverName){
-            chatUserId
+const USER_LOGIN = gql`
+    query memberLogin($name:String!){
+        MemberLogIn(name:$name){
+            id
+            userName
+            firstName
+            lastName
+            email
+            contact
+            bio
+            profilePicture
+            createdAt
+            updatedAt
         }
     }
 `;
 
-const USER_JOIN_SUBSCRIPTION = gql`
-    subscription {
-        userJoined{
+const CHAT_ROOM_LIST = gql`
+    query chatRoomList($memberID:ID!){
+        chatRoomListByMemberId(memberID:$memberID){
+            chatRoomID
             name
-            id
+            chatRoomType 
+            createdAt
         }
     }
 `;
@@ -44,20 +55,24 @@ class ShowUser extends React.Component {
         this.messagesList = React.createRef();
         this.state = {
             receiverName: '',
-            userId: '',
             display: 'hidden',
             triggerCreateChat: false,
             subscribedNewUser: false,
             userList: [],
-            filterUserList: []
+            filterUserList: [],
+            loginUser: [],
+            chatRoomUserList: [],
+            chatRoomID: '',
+            memberID: '',
+            showChat: true
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
+        this.handleNewChatDialog = this.handleNewChatDialog.bind(this);
     }
 
-    async initializeChat(name, userChat) {
-        let result = await userChat({ variables: { senderName: this.props.user, receiverName: name } });
-        this.setState({ receiverName: name, userId: result.data.userChat.chatUserId, display: 'show', triggerCreateChat: true });
+    async initializeChat(chatRoomID, name) {
+        this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true });
         this.disable = true;
     }
 
@@ -80,6 +95,7 @@ class ShowUser extends React.Component {
         // })
         // this.setState({ subscribedNewUser: true });
         this.fetchUserFromQuery();
+        this.fetchLooginUserDetail();
     }
 
     fetchUserFromQuery = async () => {
@@ -93,6 +109,29 @@ class ShowUser extends React.Component {
         this.setState({ userList: result.data.users, filterUserList: result.data.users })
     }
 
+    fetchLooginUserDetail = async () => {
+        const { client } = this.props;
+        const result = await client.query({
+            query: USER_LOGIN,
+            variables: {
+                name: this.props.user
+            }
+        });
+        this.setState({ loginUser: result.data.MemberLogIn })
+        this.fetchMemberList();
+    }
+
+    fetchMemberList = async () => {
+        const { client } = this.props;
+        const result = await client.query({
+            query: CHAT_ROOM_LIST,
+            variables: {
+                memberID: this.state.loginUser.id
+            }
+        });
+        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId })
+    }
+
     filterUser(userName) {
         let filterUserList = this.state.userList.filter((user) => {
             return user.userName.toLowerCase().includes(userName)
@@ -102,8 +141,11 @@ class ShowUser extends React.Component {
 
     removeUser(e) {
         e.preventDefault();
-        // console.log('Line ---- 102',this.props.onRemoveUser);
         this.props.onRemoveUser(e);
+    }
+
+    handleNewChatDialog(e){
+        this.setState({showChat: !this.state.showChat})
     }
 
     render() {
@@ -111,70 +153,48 @@ class ShowUser extends React.Component {
         if (data.loading) { return 'Loading'; }
         if (data.error) { return `${data.error}` }
         let list = this.state.filterUserList;
+        const loginUserDetails = this.state.loginUser;
+        const chatRoomuserList = this.state.chatRoomUserList;
         return (
-            <div className={"row " + (this.props.hidden === "show" ? "" : "hidden")}>
-                <div className="user-list">
-                    <Scrollbars>
-                        {list.map((user, i) => (
-                            <ul className="list" key={i} >
-                                {/* + (user.name === this.state.receiverName ? "user-name-active" : "") */}
-                                <li className={"clearfix "}>
-                                    <div className="about">
-                                        <Mutation mutation={INITIAL_CHAT}>
-                                            {userChat => (
-                                                <div>
-                                                    <ProfileUser userName={user.userName} />
-                                                    <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.userName, userChat)}>{user.userName}</div>
-                                                </div>
-                                            )}
-                                        </Mutation>
-                                    </div>
-                                </li>
-                            </ul>
-                        ))}
-                    </Scrollbars>
-                </div>
+            <div className={this.props.hidden === "show" ? "" : "hidden"}>
 
-                <UserList list={list}/>
-
+                <UserList list={list} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleNewChatDialog={this.handleNewChatDialog}/>
                 
-                <div className="display-user col-md-4 col-lg-3">
-                    <div className="user-title">
-                        <p className="float-left">Welcome {this.props.user}</p>
-                        <button className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
+                <div className={"row "+(this.state.showChat === true ? "" : "hidden" )}>
+                    <div className="display-user col-md-4 col-lg-3">
+                        <div className="user-title">
+                            <p className="float-left">Welcome {this.props.user}</p>
+                            <button className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
+                        </div>
+
+                        <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
+
+                        <div className="user-list">
+                            <Scrollbars>
+                                {chatRoomuserList.map((user, i) => (
+                                    <ul className="list" key={i} >
+                                        {/*  */}
+                                        <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
+                                            <div className="about">
+                                                <div>
+                                                    <ProfileUser userName={user.name} />
+                                                    <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name)}>{user.name}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                ))}
+                            </Scrollbars>
+                        </div>
+
                     </div>
-                    <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
-
-
-                    <div className="user-list">
-                        <Scrollbars>
-                            {list.map((user, i) => (
-                                <ul className="list" key={i} >
-                                    {/* + (user.name === this.state.receiverName ? "user-name-active" : "") */}
-                                    <li className={"clearfix "}>
-                                        <div className="about">
-                                            <Mutation mutation={INITIAL_CHAT}>
-                                                {userChat => (
-                                                    <div>
-                                                        <ProfileUser userName={user.userName} />
-                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.userName, userChat)}>{user.userName}</div>
-                                                    </div>
-                                                )}
-                                            </Mutation>
-                                        </div>
-                                    </li>
-                                </ul>
-                            ))}
-                        </Scrollbars>
-                    </div>
-
+                    {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName}/>}
                 </div>
-                {this.state.triggerCreateChat && <CreateChat receiverName={this.state.receiverName} senderName={this.props.user} userId={this.state.userId} />}
+                
             </div>
         );
     }
 }
 
 export default compose(
-    graphql(INITIAL_CHAT, { name: 'intialChat' }),
-    graphql(SHOW_USER, { options: (props) => ({ variables: { user: props.user } }) }), withApollo)(ShowUser);
+    graphql(USER_LOGIN, { options: (props) => ({ variables: { name: props.user } }) }), withApollo)(ShowUser);

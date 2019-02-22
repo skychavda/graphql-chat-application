@@ -41,10 +41,10 @@
     border-bottom: 1px solid #aaaaaa40;
   }
 
-  .list:hover{
+  /* .list:hover{
     cursor: pointer;
     background-color: #aaaaaa40;
-  }
+  } */
 
   .user-name-active{
     background-color: #81cc80;
