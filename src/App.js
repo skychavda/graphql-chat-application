@@ -5,7 +5,6 @@ import Cookies from 'universal-cookie';
 import 'mr-emoji/css/emoji-mart.css'
 
 import ShowUser from './components/show_user/showUser';
-import Login from './components/login/login';
 
 const cookies = new Cookies();
 
@@ -37,15 +36,6 @@ const JOIN_USER = gql`
       name
     }
   }
-`;
-
-const USER_JOIN_SUBSCRIPTION = gql`
-    subscription {
-        userJoined{
-            name
-            id
-        }
-    }
 `;
 
 class App extends Component {

@@ -279,12 +279,12 @@
     display: none;
   }
   
-  /* input[type="text"]{
+  .text-box{
     width: 100%;
     padding: 10px 15px;
     outline: none;
     border:1px solid #bbb;
-  } */
+  }
 
   .clicked{
     background-color: #117c1e;

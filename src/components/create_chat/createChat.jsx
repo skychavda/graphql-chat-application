@@ -5,7 +5,6 @@ import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
 import ScrollToBottom from 'react-scroll-to-bottom';
 
-
 // New schema query
 
 const GET_CHAT = gql`
@@ -270,7 +269,7 @@ class CreateChat extends React.Component {
 
     deleteMessage(e, deleteMessage, messageId) {
         e.preventDefault();
-        deleteMessage({ variables: { deleteByID:this.props.memberID, messageID:messageId, chatRoomID:this.props.chatRoomID } });
+        deleteMessage({ variables: { deleteByID: this.props.memberID, messageID: messageId, chatRoomID: this.props.chatRoomID } });
     }
 
     // select message when user click on edit 
@@ -283,7 +282,7 @@ class CreateChat extends React.Component {
             this.setState({ messages: disabledChat });
         }
     }
-
+    //update message query
     updateMessage(e, messageUpdate, messageId) {
         if (e.key === 'Enter') {
             if (e.target.value === "") {
@@ -383,7 +382,7 @@ class CreateChat extends React.Component {
                 <Mutation mutation={NEW_MESSAGE}>
                     {newMessage => (
                         <div className="text-bar">
-                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={(this.state.error === "none" ? "" : "input-error")} />
+                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={"text-box "+(this.state.error === "none" ? "" : "input-error")} />
                             <span id={this.state.emojiShown === false ? "show-emoji-no" : "show-emoji-yes"} onClick={this.toogleEmojiState}>{'😄'}</span>
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>

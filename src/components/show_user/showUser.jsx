@@ -68,7 +68,8 @@ class ShowUser extends React.Component {
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
-        this.handleNewChatDialog = this.handleNewChatDialog.bind(this);
+        this.handleHideChatDialog = this.handleHideChatDialog.bind(this);
+        this.handleShowChatDialog = this.handleShowChatDialog.bind(this);
     }
 
     async initializeChat(chatRoomID, name) {
@@ -144,13 +145,17 @@ class ShowUser extends React.Component {
         this.props.onRemoveUser(e);
     }
 
-    handleNewChatDialog(e){
-        this.setState({showChat: !this.state.showChat})
+    handleHideChatDialog(e){
+        this.setState({showChat: false})
+    }
+
+    handleShowChatDialog(e){
+        this.setState({showChat: true})
     }
 
     render() {
         const data = this.props.data;
-        if (data.loading) { return 'Loading'; }
+        if (data.loading) { return <div className="loader"></div>; }
         if (data.error) { return `${data.error}` }
         let list = this.state.filterUserList;
         const loginUserDetails = this.state.loginUser;
@@ -158,13 +163,13 @@ class ShowUser extends React.Component {
         return (
             <div className={this.props.hidden === "show" ? "" : "hidden"}>
 
-                <UserList list={list} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleNewChatDialog={this.handleNewChatDialog}/>
+                <UserList list={list} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog}/>
                 
                 <div className={"row "+(this.state.showChat === true ? "" : "hidden" )}>
                     <div className="display-user col-md-4 col-lg-3">
                         <div className="user-title">
-                            <p className="float-left">Welcome {this.props.user}</p>
-                            <button className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
+                            <p className="float-left" style={{marginBottom: 0}}>Welcome {this.props.user}</p>
+                            <button style={{position: 'relative', bottom: '3px'}} className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
                         </div>
 
                         <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
@@ -172,7 +177,7 @@ class ShowUser extends React.Component {
                         <div className="user-list">
                             <Scrollbars>
                                 {chatRoomuserList.map((user, i) => (
-                                    <ul className="list" key={i} >
+                                    <ul className="list ripple" key={i} >
                                         {/*  */}
                                         <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
                                             <div className="about">

@@ -27,9 +27,40 @@
     width: 12px;
     float: right;
     margin: 10px 2px;
-    border: 1px solid #cfcfcf;
+    border: 1px solid #39c527;
     transform: rotate(33deg);
     border-top: 0;
     border-left: 0;
     transition: all .3s ease;
+}
+
+.user-list-box{
+    width: 50%;
+    border: 1px solid #dfdfdf;
+    margin-top: 25px; 
+    margin-left: 25px;
+}
+
+.user-list-box ul {
+    padding: 0;
+    list-style-type: none;
+    margin-bottom: 0;
+}
+
+.user-list-box .name {
+    padding-left: 0px;
+}
+
+.ripple {
+    background-position: center;
+    transition: background 0.8s;
+  }
+.ripple:hover {
+    background: #dfdfdf radial-gradient(circle, transparent 1%, #dfdfdf 1%) center/15000%;
+    cursor: pointer;
+}
+.ripple:active {
+    background-color: #efefef;
+    background-size: 100%;
+    transition: background 0s;
 }

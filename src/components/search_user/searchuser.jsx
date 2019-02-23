@@ -14,9 +14,9 @@ class SearchUser extends React.Component {
 
     render() {
         return (
-            <div>
-                <input type="text" onChange={(e) => this.handleUserName(e)} />
-            </div>
+            
+                <input type="text" className="text-box" onChange={(e) => this.handleUserName(e)} />
+            
         );
     }
 }
