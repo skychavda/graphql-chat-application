@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Mutation, graphql, compose, Query } from "react-apollo";
+import { Mutation, graphql, compose } from "react-apollo";
 import gql from "graphql-tag";
 import Cookies from 'universal-cookie';
 import 'mr-emoji/css/emoji-mart.css'
@@ -30,14 +30,6 @@ const NEW_USER = gql`
   }
 `;
 
-const JOIN_USER = gql`
-  mutation JoinUser($newUser:String!){
-    joinUser(name:$newUser){
-      name
-    }
-  }
-`;
-
 class App extends Component {
   constructor(props) {
     super(props);
@@ -45,8 +37,8 @@ class App extends Component {
       user: '',
       displayLogin: 'hidden',
       displaySignup: 'hidden',
-      displayShowUser: 'hidden',
-      displayContainer: 'show',
+      displayShowUser: false,
+      displayContainer: true,
       error: 'none',
       triggerShowUser: false,
       userName: '',
@@ -68,15 +60,14 @@ class App extends Component {
 
   componentDidMount() {
     var user = cookies.get('loginUser');
-    console.log('Line ---- 33', cookies.get('loginUser'));
     if (user !== undefined) {
-      this.setState({ user: user, displayShowUser: 'show', triggerShowUser: true, displayLogin:'show', displayContainer: 'hidden' });
+      this.setState({ user: user, displayShowUser: true, triggerShowUser: true, displayLogin: 'show', displayContainer: false });
     }
   }
 
   removeUser() {
     cookies.remove('loginUser');
-    this.setState({ user: '', displayShowUser: 'hidden', triggerShowUser: false, displayLogin: 'hidden' });
+    this.setState({ user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true });
   }
 
   async enterUser(e, joinUser) {
@@ -88,7 +79,6 @@ class App extends Component {
         this.setState({ error: 'none' });
         this.setState({ user: e.target.value, display: 'show', triggerShowUser: true });
         cookies.set('loginUser', e.target.value);
-        console.log('Line ---- 39', cookies.get('loginUser'));
         e.preventDefault();
       }
     }
@@ -102,16 +92,17 @@ class App extends Component {
     const email = this.state.email;
     const bio = this.state.bio;
 
-    newUser({ variables: { userName: userName, firstName: firstName, lastName: lastName, email: email, contact: number, bio: bio } });
-    this.setState({ user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: 'show', displayContainer: 'hidden' });
+    cookies.set('loginUser', userName);
+
+    await newUser({ variables: { userName: userName, firstName: firstName, lastName: lastName, email: email, contact: number, bio: bio } });
+    this.setState({ user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: true, displayContainer: false });
     e.preventDefault();
   }
 
   async login(e) {
     const userName = this.state.userName;
     cookies.set('loginUser', userName);
-    this.setState({ user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: 'show', displayContainer: 'hidden' });
-    console.log('Line ---- 123',cookies.get('loginUser'));
+    this.setState({ user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: true, displayContainer: false });
     e.preventDefault();
   }
 
@@ -145,11 +136,10 @@ class App extends Component {
 
   render() {
     const user = this.state.user;
-    console.log('Line ---- 76', this.state.user);
     return (
       <div className="main-div-chat">
-        <div className={"container-login100 "+ (this.state.displayContainer === "show" ? "" : "hidden")}>
-          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 "+(this.state.displaySignup === "show" ? "" : "hidden")}>
+        {this.state.displayContainer && <div className={"container-login100 "}>
+          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displaySignup === "show" ? "" : "hidden")}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Welcome to chat application
@@ -217,17 +207,17 @@ class App extends Component {
                   <div className="login100-form-bgbtn"></div>
                   <button className="login100-form-btn" onClick={(e) => this.login(e)}>
                     Login
-							    </button>
+                  </button>
                 </div>
               </div>
               <h6 onClick={this.handleNotAMember}>Not a member?</h6>
             </div>
           </div>
-        </div >
+        </div >}
         {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} />}
       </div>
     );
   }
 }
 
-export default compose(graphql(JOIN_USER, { name: 'joinUser' }))(App);
+export default compose(graphql(NEW_USER))(App);

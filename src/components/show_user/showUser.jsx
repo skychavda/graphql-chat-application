@@ -8,7 +8,6 @@ import CreateChat from '../create_chat/createChat';
 import SearchUser from '../search_user/searchuser';
 import ProfileUser from '../profile_user/profileuser';
 import UserList from '../user_list/userlist';
-// import NewMessage from '../newmessage';
 
 const SHOW_USER = gql`
   query users($user:String!){
@@ -49,6 +48,74 @@ const CHAT_ROOM_LIST = gql`
     }
 `;
 
+const CHAT_ROOM_LIST_SUBSCRIPTION = gql`
+    subscription chatRoomListByMember($memberID:ID!){
+    chatRoomListByMember(memberID:$memberID){
+        chatRoomID
+        creatorID
+        creator{
+        id
+        userName
+        }
+        chatRoomName
+        chatRoomType
+        members{
+        id
+        chatRoomID
+        member{
+            id
+            userName
+        }
+        }
+        createdAt
+    }
+    }
+`;
+
+const DELETE_CHAT = gql`
+    mutation deleteChat($chatRoomID:ID!,$memberID:ID!){
+        deleteChat(input:{
+            chatRoomID:$chatRoomID,
+            memberID:$memberID
+        }){
+            id
+            chatRoomID
+            member{
+                id
+                userName
+                firstName
+                lastName
+            }
+            joinAt
+            deleteAt
+        }
+    }
+`;
+
+const DELETE_CHAT_SUBSCRIPTION = gql`
+    subscription chatDelete($chatRoomID:ID!){
+        chatDelete(chatRoomID:$chatRoomID){
+            chatRoomID
+            creatorID
+            creator{
+               id
+               userName
+            }
+            chatRoomName
+            chatRoomType
+            members{
+            id
+                chatRoomID
+                member{
+                 id
+                 userName
+                }
+            }
+            createdAt
+        }
+    }
+`;
+
 class ShowUser extends React.Component {
     constructor(props) {
         super(props);
@@ -70,6 +137,7 @@ class ShowUser extends React.Component {
         this.filterUser = this.filterUser.bind(this);
         this.handleHideChatDialog = this.handleHideChatDialog.bind(this);
         this.handleShowChatDialog = this.handleShowChatDialog.bind(this);
+        this.enableNewMemberSubscription = this.enableNewMemberSubscription.bind(this);
     }
 
     async initializeChat(chatRoomID, name) {
@@ -95,9 +163,46 @@ class ShowUser extends React.Component {
         //     }
         // })
         // this.setState({ subscribedNewUser: true });
+
+       
         this.fetchUserFromQuery();
         this.fetchLooginUserDetail();
     }
+
+    componentDidUpdate(prev) {
+        // this.addNewMessageSubscription.unsubscribe();
+        if (this.state.receiverName !== prev.receiverName) {
+            // this.enableNewMemberSubscription();
+        }
+    }
+
+    enableNewMemberSubscription() {
+        this.props.data.subscribeToMore({
+            document: CHAT_ROOM_LIST_SUBSCRIPTION,
+            variables: { memberID: this.state.loginUser.id },
+            updateQuery: (prev, { subscriptionData }) => {
+                if (!subscriptionData.data) return prev;
+                const newMember = subscriptionData.data.chatRoomListByMember;
+                console.log('Line ---- 189', newMember);
+            }
+        })
+
+        this.props.data.subscribeToMore({
+            document: DELETE_CHAT_SUBSCRIPTION,
+            variables: { chatRoomID: this.state.chatRoomID },
+            updateQuery: (prev, { subscriptionData }) => {
+                if (!subscriptionData.data) return prev;
+                const deletedChat = subscriptionData.data.chatDelete;
+                console.log('Line ---- 149', deletedChat);
+                // const userIndex = userList.findIndex(userList => userList.id === newName.id)
+                // if (userIndex > -1) {
+                //     userList.push(newName)
+                //     this.setState({ userList })
+                // }
+            }
+        })
+    }
+
 
     fetchUserFromQuery = async () => {
         const { client } = this.props;
@@ -107,7 +212,7 @@ class ShowUser extends React.Component {
                 user: this.props.user
             }
         });
-        this.setState({ userList: result.data.users, filterUserList: result.data.users })
+        this.setState({ userList: result.data.users })
     }
 
     fetchLooginUserDetail = async () => {
@@ -130,14 +235,20 @@ class ShowUser extends React.Component {
                 memberID: this.state.loginUser.id
             }
         });
-        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId })
+        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId })
     }
 
     filterUser(userName) {
-        let filterUserList = this.state.userList.filter((user) => {
-            return user.userName.toLowerCase().includes(userName)
+        let filteredUserList = this.state.chatRoomUserList.filter((user) => {
+            return user.name.toLowerCase().includes(userName)
         })
-        this.setState({ filterUserList: filterUserList })
+        this.setState({ filterUserList: filteredUserList })
+    }
+
+    deleteRoom = async (e, chatRoomID, memberID, deleteChat) => {
+        deleteChat({ variables: { chatRoomID: chatRoomID, memberID: memberID } });
+        this.setState({ chatRoomID: chatRoomID })
+        e.preventDefault();
     }
 
     removeUser(e) {
@@ -145,61 +256,70 @@ class ShowUser extends React.Component {
         this.props.onRemoveUser(e);
     }
 
-    handleHideChatDialog(e){
-        this.setState({showChat: false})
+    handleHideChatDialog(e) {
+        this.setState({ showChat: false })
     }
 
-    handleShowChatDialog(e){
-        this.setState({showChat: true})
+    handleShowChatDialog(e) {
+        this.setState({ showChat: true })
     }
 
     render() {
         const data = this.props.data;
         if (data.loading) { return <div className="loader"></div>; }
         if (data.error) { return `${data.error}` }
+        let userList = this.state.userList;
         let list = this.state.filterUserList;
         const loginUserDetails = this.state.loginUser;
-        const chatRoomuserList = this.state.chatRoomUserList;
-        return (
-            <div className={this.props.hidden === "show" ? "" : "hidden"}>
+        if (this.props.hidden) {
+            return (
+                <div>
+                    <UserList list={userList} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog} />
 
-                <UserList list={list} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog}/>
-                
-                <div className={"row "+(this.state.showChat === true ? "" : "hidden" )}>
-                    <div className="display-user col-md-4 col-lg-3">
-                        <div className="user-title">
-                            <p className="float-left" style={{marginBottom: 0}}>Welcome {this.props.user}</p>
-                            <button style={{position: 'relative', bottom: '3px'}} className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
-                        </div>
+                    {this.state.showChat && <div className="row">
+                        <div className="display-user col-md-4 col-lg-3">
+                            <div className="user-title">
+                                <p className="float-left" style={{ marginBottom: 0 }}>Welcome {this.props.user}</p>
+                                <button style={{ position: 'relative', bottom: '3px' }} className="btn btn-outline-primary float-right btn-sm" onClick={(e) => this.removeUser(e)}>Log out</button>
+                            </div>
 
-                        <SearchUser userListSearch={list} onFilterUser={this.filterUser} />
+                            <SearchUser onFilterUser={this.filterUser} />
 
-                        <div className="user-list">
-                            <Scrollbars>
-                                {chatRoomuserList.map((user, i) => (
-                                    <ul className="list ripple" key={i} >
-                                        {/*  */}
-                                        <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
-                                            <div className="about">
-                                                <div>
-                                                    <ProfileUser userName={user.name} />
-                                                    <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name)}>{user.name}</div>
+                            <div className="user-list">
+                                <Scrollbars>
+                                    {list.map((user, i) => (
+                                        <ul className="list ripple" key={i} >
+                                            {/*  */}
+                                            <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
+                                                <div className="about">
+                                                    <div>
+                                                        <ProfileUser userName={user.name} />
+                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name)}>
+                                                            {user.name}
+                                                            <Mutation mutation={DELETE_CHAT}>
+                                                                {deleteChat => (
+                                                                    <button className="del-icon btn btn-outline-danger btn-sm" onClick={(e) => this.deleteRoom(e, user.chatRoomID, this.state.loginUser.id, deleteChat)}><i className="fas fa-trash-alt"></i></button>
+                                                                )}
+                                                            </Mutation>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                ))}
-                            </Scrollbars>
-                        </div>
+                                            </li>
+                                        </ul>
+                                    ))}
+                                </Scrollbars>
+                            </div>
 
-                    </div>
-                    {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName}/>}
+                        </div>
+                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} />}
+                    </div>}
+
                 </div>
-                
-            </div>
-        );
+            );
+        }
     }
 }
 
 export default compose(
+    graphql(DELETE_CHAT, { name: "deleteChat" }),
     graphql(USER_LOGIN, { options: (props) => ({ variables: { name: props.user } }) }), withApollo)(ShowUser);

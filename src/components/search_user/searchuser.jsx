@@ -1,22 +1,15 @@
 import React from 'react';
+import './searchuser.css';
 
 class SearchUser extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            filterUser: []
-        }
-    }
-
+    
     handleUserName(e) {
         this.props.onFilterUser(e.target.value);
     }
 
     render() {
         return (
-            
-                <input type="text" className="text-box" onChange={(e) => this.handleUserName(e)} />
-            
+            <input type="text" className="search-text-box" onChange={(e) => this.handleUserName(e)} />
         );
     }
 }

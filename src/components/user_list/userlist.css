@@ -12,7 +12,6 @@
 }
 
 .check-box{
-    display: inline-block;
     height: 20px;
     width: 20px;
     float: right;
@@ -22,7 +21,6 @@
 }
 
 .arrow{
-    display: inline-block;
     height: 20px;
     width: 12px;
     float: right;
@@ -63,4 +61,9 @@
     background-color: #efefef;
     background-size: 100%;
     transition: background 0s;
+}
+
+.btn-container{
+    width: 95%;
+    margin: 3% auto 0 auto;
 }

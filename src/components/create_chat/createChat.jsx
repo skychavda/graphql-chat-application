@@ -173,7 +173,7 @@ class CreateChat extends React.Component {
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
     }
 
-    addNewMessageSubscription =
+    addNewMessageSubscription(){
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_POST_SUBSCRIPTION,
@@ -186,10 +186,10 @@ class CreateChat extends React.Component {
                 this.setState({ message });
             }
         })
-
+    }
     componentDidMount() {
 
-        this.addNewMessageSubscription;
+        this.addNewMessageSubscription();
 
         //subscription for delete message
         this.props.data.subscribeToMore({
@@ -242,7 +242,6 @@ class CreateChat extends React.Component {
                 chatRoomID: this.props.chatRoomID, memberID: this.props.memberID
             }
         });
-        // console.log('Line ---- 110',result.data.chats);
         let messages = this.state.messages.slice(0);
         messages = [];
         let mainChat = result.data.chatconversationByChatRoomId;

@@ -1,32 +1,32 @@
 import React from 'react';
-// import { Scrollbars } from 'react-custom-scrollbars';
-import { Mutation, compose, graphql, withApollo } from "react-apollo";
+import { Mutation, compose, withApollo } from "react-apollo";
 import gql from "graphql-tag";
 import ProfileUser from '../profile_user/profileuser';
+import SearchUser from '../search_user/searchuser';
 import './userlist.css';
 
 const NEW_PRIVATE_CHAT_ROOM = gql`
     mutation newChatRoom($creatorID:ID!, $chatRoomType:ChatRoomType!, $receiverID:ID!){
-  newChatRoom(input:{
-    creatorID:$creatorID,
-    chatRoomType:$chatRoomType
-  },receiverID:$receiverID){
-    chatRoomID
-    creatorID
-    creator{
-      id
-      userName
-      firstName
-      lastName
-    }
-    chatRoomName
-    members{
-      id
-      member{
+    newChatRoom(input:{
+        creatorID:$creatorID,
+        chatRoomType:$chatRoomType
+    },receiverID:$receiverID){
+        chatRoomID
+        creatorID
+        creator{
+        id
         userName
-      }
+        firstName
+        lastName
+        }
+        chatRoomName
+        members{
+        id
+        member{
+            userName
+        }
+        }
     }
-  }
 }
 `;
 
@@ -41,8 +41,11 @@ class UserList extends React.Component {
             showSingleChat: true,
             showGroupChat: true,
             groupMemberList: [],
-            messages: []
+            messages: [],
+            userList: props.list,
+            filterUserList: props.list
         }
+        this.filterUser = this.filterUser.bind(this);
     }
 
     componentDidMount() {
@@ -58,8 +61,6 @@ class UserList extends React.Component {
 
     handlePrivateChat = async (e, userId, chatRoomType, newChatRoom) => {
         if (chatRoomType === 'GROUP') {
-            // this.setState({ groupMemberList: groupMemberList });
-            console.log('Line ---- 50', groupMemberList);
             this.setState({ showUserList: false })
             this.props.handleShowChatDialog(e);
         } else {
@@ -84,9 +85,8 @@ class UserList extends React.Component {
 
     addUserToGroupList(e, id) {
         e.preventDefault();
-        const userId = { "id": id }
+        // const userId = { "id": id }
         const index = groupMemberList.findIndex(list => list === id);
-        console.log('Line ---- 88', index);
         if (index > -1) {
             groupMemberList.splice(index, 1);
         } else {
@@ -102,49 +102,55 @@ class UserList extends React.Component {
                 messages[foundIndex].isChecked = true;
                 this.setState({ messages });
             }
-
         }
     }
 
+    filterUser(name){
+        let filteredUserList = this.state.userList.filter((user) => {
+            return user.userName.toLowerCase().includes(name)
+        })
+        this.setState({ filterUserList: filteredUserList })
+    }
+
     render() {
-        const list = this.props.list;
+        const list = this.state.filterUserList;
         return (
             <div>
-                <div>
-                    <button className="btn btn-outline-secondary btn-lg" onClick={(e) => this.handleNewChatDialog(e)}>New Chat</button>
-                    <button className="btn btn-outline-secondary btn-lg" onClick={(e) => this.handleGroupChatDialog(e)}>New Group Chat</button>
+                <div className="btn-container">
+                    <button className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleNewChatDialog(e)}>New Chat</button>
+                    <button style={{ marginLeft: '15px' }} className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleGroupChatDialog(e)}>Create Group</button>
                 </div>
-                <div className={"user-list-box " + (this.state.showUserList === false ? "hidden" : "")}>
-                    
-                        {list.map((user, i) => (
-                            <ul className="list ripple" key={i} >
-                                {/* + (user.name === this.state.receiverName ? "user-name-active" : "") */}
-                                <li className={"clearfix "}>
-                                    <div className="about">
-                                        <div>
-                                            <ProfileUser userName={user.userName} />
-                                            {this.state.showSingleChat && <Mutation mutation={NEW_PRIVATE_CHAT_ROOM}>
-                                                {newChatRoom => (
-                                                    <div className={"name "} key={user.id} onClick={this.state.showGroupChat === false ? (e) => this.handlePrivateChat(e, user.id, 'PRIVATE', newChatRoom) : (e) => this.addUserToGroupList(e, user.id)}>
-                                                        {user.userName}
-                                                        {this.state.showGroupChat && <div className={user.isChecked === true ? "arrow" : "check-box"}></div>}
-                                                    </div>
-                                                )}
-                                            </Mutation>}
-                                        </div>
+                {this.state.showUserList  && <div className="user-list-box ">
+                    <SearchUser onFilterUser={this.filterUser} />
+                    {list.map((user, i) => (
+                        <ul className="list ripple" key={i} >
+                            {/* + (user.name === this.state.receiverName ? "user-name-active" : "") */}
+                            <li className={"clearfix "}>
+                                <div className="about">
+                                    <div>
+                                        <ProfileUser userName={user.userName} />
+                                        {this.state.showSingleChat && <Mutation mutation={NEW_PRIVATE_CHAT_ROOM}>
+                                            {newChatRoom => (
+                                                <div className={"name "} key={user.id} onClick={this.state.showGroupChat === false ? (e) => this.handlePrivateChat(e, user.id, 'PRIVATE', newChatRoom) : (e) => this.addUserToGroupList(e, user.id)}>
+                                                    {user.userName}
+                                                    {this.state.showGroupChat && <div className={user.isChecked === true ? "arrow" : "check-box"}></div>}
+                                                </div>
+                                            )}
+                                        </Mutation>}
                                     </div>
-                                </li>
-                            </ul>
-                        ))}
-                    
+                                </div>
+                            </li>
+                        </ul>
+                    ))}
+
                     {
-                        this.state.showGroupChat && <div style={{textAlign:'center',margin:'10px auto'}}><Mutation mutation={NEW_PRIVATE_CHAT_ROOM}>
+                        this.state.showGroupChat && <div style={{ textAlign: 'center', margin: '10px auto' }}><Mutation mutation={NEW_PRIVATE_CHAT_ROOM}>
                             {newChatRoom => (
-                                <button style={{textTransform: 'uppercase'}} className="btn btn-outline-primary btn-md" onClick={(e) => this.handlePrivateChat(e, groupMemberList, 'GROUP', newChatRoom)}>create group</button>
+                                <button style={{ textTransform: 'uppercase' }} className="btn btn-outline-primary btn-md" onClick={(e) => this.handlePrivateChat(e, groupMemberList, 'GROUP', newChatRoom)}>create group</button>
                             )}
                         </Mutation></div>
                     }
-                </div>
+                </div>}
             </div>
         );
     }
