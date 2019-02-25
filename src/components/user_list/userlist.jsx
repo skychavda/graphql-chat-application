@@ -76,7 +76,8 @@ class UserList extends React.Component {
             filterUserList: props.list,
             groupName: '',
             receiverID: [],
-            groupNameText: false
+            groupNameText: false,
+            inputError : false
         }
         this.filterUser = this.filterUser.bind(this);
         this.handleGroupName = this.handleGroupName.bind(this);
@@ -94,25 +95,29 @@ class UserList extends React.Component {
     }
 
     handleGroupChat = async (e, chatRoomType, newGroupChatRoom) => {
-        const creatorID = this.props.loginUserDetalis.id;
         const groupName = this.state.groupName;
-        const result = await newGroupChatRoom({ variables: { creatorID: creatorID, chatRoomName: groupName, chatRoomType: chatRoomType, receiverID: groupMemberList } })
-        this.setState({ chatRoomID: result.data.newGroupchatRoom.chatRoomID, showUserList: false })
-        this.props.onInitializeChat(this.state.chatRoomID, groupName, result.data.newGroupchatRoom.chatRoomType);
-        this.props.handleShowChatDialog(e);
+        if (groupName === "") {
+            this.setState({inputError: true})
+        } else {
+            const creatorID = this.props.loginUserDetalis.id;
+            const result = await newGroupChatRoom({ variables: { creatorID: creatorID, chatRoomName: groupName, chatRoomType: chatRoomType, receiverID: groupMemberList } })
+            this.setState({ chatRoomID: result.data.newGroupchatRoom.chatRoomID, showUserList: false, inputError: false })
+            this.props.onInitializeChat(this.state.chatRoomID, groupName, result.data.newGroupchatRoom.chatRoomType);
+            this.props.handleShowChatDialog(e);
+        }
     }
 
     handlePrivateChat = async (e, userId, chatRoomType, newPrivateChatRoom) => {
         const creatorID = this.props.loginUserDetalis.id;
         const result = await newPrivateChatRoom({ variables: { creatorID: creatorID, chatRoomType: chatRoomType, receiverID: userId } })
         this.setState({ chatRoomID: result.data.newPrivateChatRoom.chatRoomID, showUserList: false })
-        console.log('Line ---- 109',result);
+        console.log('Line ---- 109', result);
         this.props.onInitializeChat(this.state.chatRoomID, result.data.newPrivateChatRoom.members[1].member.userName, result.data.newPrivateChatRoom.chatRoomType);
         this.props.handleShowChatDialog(e);
     }
 
-    closeDialogList(e){
-        this.setState({ showUserList: false, groupNameText: false})
+    closeDialogList(e) {
+        this.setState({ showUserList: false, groupNameText: false })
         this.props.handleShowChatDialog(e);
     }
 
@@ -165,8 +170,8 @@ class UserList extends React.Component {
                 <div className="btn-container">
                     <button className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleNewChatDialog(e)}>New Chat</button>
                     <button style={{ marginLeft: '15px' }} className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleGroupChatDialog(e)}>Create Group</button>
-                    {this.state.groupNameText && <input style={{ marginLeft: '15px' }} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
-                    {this.state.showUserList && <div className="close" onClick={()=>this.closeDialogList()}>&times;</div>}
+                    {this.state.groupNameText && <input style={{ marginLeft: '15px' }} className={(this.state.inputError === false ? "" : "input-error")} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
+                    {this.state.showUserList && <div className="close" onClick={() => this.closeDialogList()}>&times;</div>}
                 </div>
                 {this.state.showUserList && <div className="user-list-box ">
                     <SearchUser onFilterUser={this.filterUser} />
