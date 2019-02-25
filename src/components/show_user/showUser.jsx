@@ -131,7 +131,8 @@ class ShowUser extends React.Component {
             chatRoomUserList: [],
             chatRoomID: '',
             memberID: '',
-            showChat: true
+            showChat: true,
+            chatRoomType: ''
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
@@ -140,8 +141,8 @@ class ShowUser extends React.Component {
         this.enableNewMemberSubscription = this.enableNewMemberSubscription.bind(this);
     }
 
-    async initializeChat(chatRoomID, name) {
-        this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true });
+    async initializeChat(chatRoomID, name, chatRoomType) {
+        this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType: chatRoomType });
         this.disable = true;
     }
 
@@ -164,7 +165,6 @@ class ShowUser extends React.Component {
         // })
         // this.setState({ subscribedNewUser: true });
 
-       
         this.fetchUserFromQuery();
         this.fetchLooginUserDetail();
     }
@@ -294,7 +294,7 @@ class ShowUser extends React.Component {
                                                 <div className="about">
                                                     <div>
                                                         <ProfileUser userName={user.name} />
-                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name)}>
+                                                        <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name, user.chatRoomType)}>
                                                             {user.name}
                                                             <Mutation mutation={DELETE_CHAT}>
                                                                 {deleteChat => (
@@ -311,7 +311,7 @@ class ShowUser extends React.Component {
                             </div>
 
                         </div>
-                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} />}
+                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType}/>}
                     </div>}
 
                 </div>

@@ -165,7 +165,10 @@ class CreateChat extends React.Component {
             text: '',
             senderID: '',
             messages: [],
-            chatConversationId: ''
+            chatConversationId: '',
+            emojiArray: ['🤣', '😊', '😂', '😍', '😁', '😉', '😎', '😜'],
+            emoji: '',
+            emojiNumber: 0
         };
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
@@ -173,7 +176,7 @@ class CreateChat extends React.Component {
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
     }
 
-    addNewMessageSubscription(){
+    addNewMessageSubscription() {
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_POST_SUBSCRIPTION,
@@ -337,6 +340,13 @@ class CreateChat extends React.Component {
         this.setState({
             emojiShown: !this.state.emojiShown
         });
+        let emojiNumber = this.state.emojiNumber;
+        if (emojiNumber !== 7) {
+            emojiNumber++;
+        } else {
+            emojiNumber = 0;
+        }
+        this.setState({ emojiNumber: emojiNumber++ })
     }
 
     render() {
@@ -344,6 +354,7 @@ class CreateChat extends React.Component {
         if (data.loading) return 'Loading';
         if (data.error) return `${data.error}`;
         let messages = this.state.messages;
+        const emoji = this.state.emojiArray[this.state.emojiNumber];
         return (
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
@@ -356,11 +367,11 @@ class CreateChat extends React.Component {
                         <div style={{ position: 'relative' }} key={i}>
                             <div className={(chat.sender.id === this.props.memberID && chat.isHover === true ? "edit-menu" : "display-none")}>
                                 <ul>
-                                    <li onClick={() => this.selectMessage(chat.messageId)}>Edit</li>
+                                    <li className="icon icon-edit" onClick={() => this.selectMessage(chat.messageId)}><i className="fas fa-edit"></i></li>
                                     {
                                         <Mutation mutation={DELETE_MESSAGE}>
                                             {deleteMessage => (
-                                                <li onClick={(e) => this.deleteMessage(e, deleteMessage, chat.messageId)}>Delete</li>
+                                                <li className="icon icon-del" onClick={(e) => this.deleteMessage(e, deleteMessage, chat.messageId)}><i className="fas fa-trash-alt"></i></li>
                                             )}
                                         </Mutation>
                                     }
@@ -375,14 +386,17 @@ class CreateChat extends React.Component {
                                     </Mutation>}
                                 </div>
                             </div>
+                            {this.props.chatRoomType === 'GROUP' && <div key={i} className={"username " + (chat.sender.id === this.props.memberID ? "me" : "")}>
+                                <p>{chat.sender.userName}</p>
+                            </div>}
                         </div>
                     ))}
                 </ScrollToBottom>
                 <Mutation mutation={NEW_MESSAGE}>
                     {newMessage => (
                         <div className="text-bar">
-                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={"text-box "+(this.state.error === "none" ? "" : "input-error")} />
-                            <span id={this.state.emojiShown === false ? "show-emoji-no" : "show-emoji-yes"} onClick={this.toogleEmojiState}>{'😄'}</span>
+                            <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={"text-box " + (this.state.error === "none" ? "" : "input-error")} />
+                            <span id={this.state.emojiShown === false ? "show-emoji-no" : "show-emoji-yes"} onClick={this.toogleEmojiState}>{emoji}</span>
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>
                     )}

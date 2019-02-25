@@ -16,10 +16,10 @@
   text-align: left;
 }
 
-.user-list,.new-message{
+.user-list{
   width: 100%;
   float: left;
-  height: 605px;
+  height: 620px;
 }
 
 .user-list ul {
@@ -41,7 +41,6 @@
   height: 55px;
   text-align: left;
   float: left;
-  border-bottom: 1px solid #aaaaaa40;
 }
 
 .user-name-active{

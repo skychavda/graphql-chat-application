@@ -9,7 +9,7 @@ class SearchUser extends React.Component {
 
     render() {
         return (
-            <input type="text" className="search-text-box" onChange={(e) => this.handleUserName(e)} />
+            <input type="text" className="search-text-box" onChange={(e) => this.handleUserName(e)} placeholder="search user..."/>
         );
     }
 }
