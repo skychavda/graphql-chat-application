@@ -21,7 +21,6 @@
 .input-error{
   border-color: #ff0000!important;
   outline: none;
-  border-radius: 4px;
   transition: all .5s ease-in;
 }
 

@@ -60,3 +60,12 @@
     font-size: 30px;
     cursor: pointer;
 }
+
+.group-text-box{
+    margin-left: 15px;
+    outline: none;
+    border: 1px solid;
+    padding: .375rem .75rem;
+    border-radius: 4px;
+    vertical-align: middle;
+}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Mutation, compose, graphql, withApollo } from "react-apollo";
+import { Mutation, compose, graphql, withApollo, Query } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
 import { Scrollbars } from 'react-custom-scrollbars';
@@ -46,6 +46,20 @@ const CHAT_ROOM_LIST = gql`
             createdAt
         }
     }
+`;
+
+const MEMBER_LIST_BY_CHATROOM = gql`
+    query memberListByChatRoomId($chatRoomID:ID!,$memberID:ID!){
+    memberListByChatRoomId(chatRoomID:$chatRoomID,memberID:$memberID){
+        id
+        chatRoomID
+        member{
+            id
+            userName
+        }
+        joinAt  
+    }
+}
 `;
 
 const CHAT_ROOM_LIST_SUBSCRIPTION = gql`
@@ -132,7 +146,8 @@ class ShowUser extends React.Component {
             chatRoomID: '',
             memberID: '',
             showChat: true,
-            chatRoomType: ''
+            chatRoomType: '',
+            memberListShow: true
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
@@ -142,7 +157,7 @@ class ShowUser extends React.Component {
     }
 
     async initializeChat(chatRoomID, name, chatRoomType) {
-        this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType: chatRoomType });
+        this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType: chatRoomType, memberListShow: false });
         this.disable = true;
     }
 
@@ -224,10 +239,10 @@ class ShowUser extends React.Component {
             }
         });
         this.setState({ loginUser: result.data.MemberLogIn })
-        this.fetchMemberList();
+        this.fetchRoomList();
     }
 
-    fetchMemberList = async () => {
+    fetchRoomList = async () => {
         const { client } = this.props;
         const result = await client.query({
             query: CHAT_ROOM_LIST,
@@ -296,11 +311,11 @@ class ShowUser extends React.Component {
                                                         <ProfileUser userName={user.name} />
                                                         <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name, user.chatRoomType)}>
                                                             {user.name}
-                                                            <Mutation mutation={DELETE_CHAT}>
+                                                            {/* <Mutation mutation={DELETE_CHAT}>
                                                                 {deleteChat => (
                                                                     <button className="del-icon btn btn-outline-danger btn-sm" onClick={(e) => this.deleteRoom(e, user.chatRoomID, this.state.loginUser.id, deleteChat)}><i className="fas fa-trash-alt"></i></button>
                                                                 )}
-                                                            </Mutation>
+                                                            </Mutation> */}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -311,7 +326,7 @@ class ShowUser extends React.Component {
                             </div>
 
                         </div>
-                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType}/>}
+                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} />}
                     </div>}
 
                 </div>

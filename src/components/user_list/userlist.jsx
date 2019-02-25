@@ -170,7 +170,7 @@ class UserList extends React.Component {
                 <div className="btn-container">
                     <button className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleNewChatDialog(e)}>New Chat</button>
                     <button style={{ marginLeft: '15px' }} className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleGroupChatDialog(e)}>Create Group</button>
-                    {this.state.groupNameText && <input style={{ marginLeft: '15px' }} className={(this.state.inputError === false ? "" : "input-error")} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
+                    {this.state.groupNameText && <input className={"group-text-box "+(this.state.inputError === false ? "" : "input-error")} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
                     {this.state.showUserList && <div className="close" onClick={() => this.closeDialogList()}>&times;</div>}
                 </div>
                 {this.state.showUserList && <div className="user-list-box ">
