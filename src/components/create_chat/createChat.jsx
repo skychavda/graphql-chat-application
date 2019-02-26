@@ -397,7 +397,7 @@ class CreateChat extends React.Component {
                                     }
                                 </ul>
                             </div>
-                            <div className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")} onMouseEnter={() => this.messageFoucused(chat.messageId)} onMouseLeave={() => this.messageUnfocused(chat.messageId)}>
+                            <div className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")} onMouseEnter={() => this.messageFoucused(chat.messageId)}>
                                 <div key={chat.chatUserId}>
                                     {<Mutation mutation={UPDATE_MESSAGE}>
                                         {updateMessage => (
