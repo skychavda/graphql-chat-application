@@ -179,7 +179,7 @@ class CreateChat extends React.Component {
         this.handleGroupInfo = this.handleGroupInfo.bind(this);
     }
 
-    addNewMessageSubscription(){
+    addNewMessageSubscription() {
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_POST_SUBSCRIPTION,
@@ -195,9 +195,9 @@ class CreateChat extends React.Component {
     }
 
     componentDidMount() {
-        console.log('Line ---- 183','cdm creat');
-        this.setState({groupInfo: false,hideChatBox: true});
-        
+        console.log('Line ---- 183', 'cdm creat');
+        this.setState({ groupInfo: false, hideChatBox: true });
+
         this.addNewMessageSubscription();
 
         //subscription for delete message
@@ -260,7 +260,7 @@ class CreateChat extends React.Component {
             return x
         });
         messages = result.data.chatconversationByChatRoomId;
-        console.log('Line ---- 256',messages);
+        console.log('Line ---- 256', messages);
         this.setState({ messages, senderID: this.props.memberID })
     }
 
@@ -380,7 +380,7 @@ class CreateChat extends React.Component {
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
                     <div className="chat-about">
-                        <div className="chat-with" onClick={this.props.chatRoomType === 'GROUP' ? (e) => this.handleGroupInfo(e):null}>
+                        <div className="chat-with" onClick={this.props.chatRoomType === 'GROUP' ? (e) => this.handleGroupInfo(e) : null}>
                             {this.state.groupInfo === true ? "Group-Info" : this.props.receiverName}
                         </div>
                     </div>
@@ -436,4 +436,4 @@ export default compose(
     graphql(NEW_MESSAGE, { name: 'newMessage' }),
     graphql(DELETE_MESSAGE, { name: 'deleteMessage' }),
     graphql(UPDATE_MESSAGE, { name: 'updateMessage' }),
-    graphql(GET_CHAT), withApollo)(CreateChat);
+    graphql(GET_CHAT, { options: (props) => ({ variables: { chatRoomID: props.chatRoomID, memberID: props.memberID } }) }), withApollo)(CreateChat);
