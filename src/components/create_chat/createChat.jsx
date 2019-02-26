@@ -176,11 +176,10 @@ class CreateChat extends React.Component {
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
         this.fetchMessageFromQuery = this.fetchMessageFromQuery.bind(this);
-        this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
         this.handleGroupInfo = this.handleGroupInfo.bind(this);
     }
 
-    addNewMessageSubscription() {
+    addNewMessageSubscription(){
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_POST_SUBSCRIPTION,
@@ -190,12 +189,15 @@ class CreateChat extends React.Component {
                 const message = this.state.messages;
                 const newMessage = subscriptionData.data.messagePost;
                 message.push(newMessage);
-                this.setState({ message });
+                // this.setState({ messages: newMessage });
             }
         })
     }
-    componentDidMount() {
 
+    componentDidMount() {
+        console.log('Line ---- 183','cdm creat');
+        this.setState({groupInfo: false,hideChatBox: true});
+        
         this.addNewMessageSubscription();
 
         //subscription for delete message
@@ -258,6 +260,7 @@ class CreateChat extends React.Component {
             return x
         });
         messages = result.data.chatconversationByChatRoomId;
+        console.log('Line ---- 256',messages);
         this.setState({ messages, senderID: this.props.memberID })
     }
 
@@ -337,8 +340,8 @@ class CreateChat extends React.Component {
         return messages
     }
 
-    handleGroupInfo(){
-        this.setState({hideChatBox: !this.state.hideChatBox, groupInfo: !this.state.groupInfo})
+    handleGroupInfo() {
+        this.setState({ hideChatBox: !this.state.hideChatBox, groupInfo: !this.state.groupInfo })
     }
 
     handleTextChange(e) {
@@ -377,9 +380,9 @@ class CreateChat extends React.Component {
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
                     <div className="chat-about">
-                        <div className="chat-with" onClick={
-                            (e) => this.handleGroupInfo(e)
-                        }>{this.state.groupInfo === true ? "Group-Info" : this.props.receiverName}</div>
+                        <div className="chat-with" onClick={this.props.chatRoomType === 'GROUP' ? (e) => this.handleGroupInfo(e):null}>
+                            {this.state.groupInfo === true ? "Group-Info" : this.props.receiverName}
+                        </div>
                     </div>
                 </div>
                 {this.state.hideChatBox && <ScrollToBottom className="msj-rta macro">
@@ -423,7 +426,7 @@ class CreateChat extends React.Component {
                         </div>
                     )}
                 </Mutation>}
-                {this.state.groupInfo && <GroupInfo chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName}/>}
+                {this.state.groupInfo && <GroupInfo list={this.props.list} chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName} />}
             </div>
         );
     }
@@ -433,4 +436,4 @@ export default compose(
     graphql(NEW_MESSAGE, { name: 'newMessage' }),
     graphql(DELETE_MESSAGE, { name: 'deleteMessage' }),
     graphql(UPDATE_MESSAGE, { name: 'updateMessage' }),
-    graphql(GET_CHAT, { options: (props) => ({ variables: { chatRoomID: props.chatRoomID, memberID: props.memberID } }) }), withApollo)(CreateChat);
+    graphql(GET_CHAT), withApollo)(CreateChat);

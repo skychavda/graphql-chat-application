@@ -5,8 +5,38 @@
   padding: 0;
 }
 
-.group-info ul li{
+.group-info .ul li{
     float: left;
     padding: 10px;
-  
-  }
+}
+
+.add-member-list-box{
+    height: 605px;
+}
+
+.participent-title{
+    font-size: 15px;
+    border-bottom: 1px solid #efefef;
+    padding: 10px;
+}
+
+.participent-list{
+    width: 75%;
+    margin: 0 auto;
+    border: 1px solid #dfdfdf;
+}
+
+.participent-name{
+    font-size: 16px;
+    padding: 10px;
+}
+
+.participent-name ul{
+    padding: 0;
+    list-style-type: none;
+    margin-bottom: 0;
+}
+
+.participent-name .name{
+    padding-left: 0px;
+}

@@ -111,7 +111,6 @@ class UserList extends React.Component {
         const creatorID = this.props.loginUserDetalis.id;
         const result = await newPrivateChatRoom({ variables: { creatorID: creatorID, chatRoomType: chatRoomType, receiverID: userId } })
         this.setState({ chatRoomID: result.data.newPrivateChatRoom.chatRoomID, showUserList: false })
-        console.log('Line ---- 109', result);
         this.props.onInitializeChat(this.state.chatRoomID, result.data.newPrivateChatRoom.members[1].member.userName, result.data.newPrivateChatRoom.chatRoomType);
         this.props.handleShowChatDialog(e);
     }
@@ -177,7 +176,7 @@ class UserList extends React.Component {
                     <SearchUser onFilterUser={this.filterUser} />
                     {list.map((user, i) => (
                         <ul className="list ripple" key={i} >
-                            <li className={"clearfix "}>
+                            <li className="clearfix ">
                                 <div className="about">
                                     <div>
                                         <ProfileUser userName={user.userName} />
@@ -185,7 +184,7 @@ class UserList extends React.Component {
                                             {newPrivateChatRoom => (
                                                 <div className={"name "} key={user.id} onClick={this.state.showGroupChat === false ? (e) => this.handlePrivateChat(e, user.id, 'PRIVATE', newPrivateChatRoom) : (e) => this.addUserToGroupList(e, user.id)}>
                                                     {user.userName}
-                                                    {this.state.showGroupChat && <div className={user.isChecked === true ? "arrow" : "check-box"}></div>}
+                                                    {this.state.showGroupChat && <div className={user.isChecked === true ? "arraw" : "check-box"}></div>}
                                                 </div>
                                             )}
                                         </Mutation>}

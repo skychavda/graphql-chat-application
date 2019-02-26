@@ -93,6 +93,20 @@ const DELETE_CHAT = gql`
     }
 `;
 
+const CHAT_ROOM_DETAIL_UPDATE = gql`
+    subscription chatRoomDetailUpdate($chatRoomID:ID!){
+        chatRoomDetailUpdate(chatRoomID:$chatRoomID){
+            chatRoomID
+            chatRoomName
+            chatRoomType
+            members{
+                id
+                chatRoomID
+            }
+        }
+    }
+`;
+
 const DELETE_CHAT_SUBSCRIPTION = gql`
     subscription chatDelete($chatRoomID:ID!){
         chatDelete(chatRoomID:$chatRoomID){
@@ -134,7 +148,9 @@ class ShowUser extends React.Component {
             memberID: '',
             showChat: true,
             chatRoomType: '',
-            memberListShow: true
+            memberListShow: true,
+            loginError: '',
+            errorPopup: false
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
@@ -146,6 +162,7 @@ class ShowUser extends React.Component {
     async initializeChat(chatRoomID, name, chatRoomType) {
         this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType: chatRoomType, memberListShow: false });
         this.disable = true;
+        // this.updateChatRoomDetailSubscription();
     }
 
     componentDidMount() {
@@ -178,6 +195,19 @@ class ShowUser extends React.Component {
         }
     }
 
+    updateChatRoomDetailSubscription() {
+        this.props.data.subscribeToMore({
+            document: CHAT_ROOM_DETAIL_UPDATE,
+            variables: { chatRoomID: this.state.chatRoomID },
+            updateQuery: (prev, { subscriptionData }) => {
+                if (!subscriptionData.data) return prev;
+                const chatRoomUpdate = subscriptionData.data.chatRoomDetailUpdate;
+                console.log('Line ---- 118', chatRoomUpdate);
+                // this.setState({chatRoomUserList: newMember, filterUserList: newMember})
+            }
+        })
+    }
+
     enableNewMemberSubscription() {
         this.props.data.subscribeToMore({
             document: CHAT_ROOM_LIST_SUBSCRIPTION,
@@ -185,8 +215,7 @@ class ShowUser extends React.Component {
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData.data) return prev;
                 const newMember = subscriptionData.data.chatRoomListByMember;
-                console.log('Line ---- 189', newMember);
-                this.setState({chatRoomUserList: newMember, filterUserList: newMember})
+                this.setState({ chatRoomUserList: newMember, filterUserList: newMember })
             }
         })
 
@@ -226,7 +255,11 @@ class ShowUser extends React.Component {
                 name: this.props.user
             }
         });
-        this.setState({ loginUser: result.data.MemberLogIn })
+        if (result.data.MemberLogIn === null) {
+            this.setState({loginError: result.errors, errorPopup: true})
+        } else {
+            this.setState({ loginUser: result.data.MemberLogIn })
+        }
         this.fetchRoomList();
     }
 
@@ -279,7 +312,7 @@ class ShowUser extends React.Component {
                 <div>
                     <UserList list={userList} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog} />
 
-                    {this.state.showChat && <div className="row">
+                    {this.state.showChat && <div className="raw">
                         <div className="display-user col-md-4 col-lg-3">
                             <div className="user-title">
                                 <p className="float-left" style={{ marginBottom: 0 }}>Welcome {this.props.user}</p>
@@ -314,7 +347,7 @@ class ShowUser extends React.Component {
                             </div>
 
                         </div>
-                        {this.state.triggerCreateChat && <CreateChat chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} />}
+                        {this.state.triggerCreateChat && <CreateChat list={userList} chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} />}
                     </div>}
 
                 </div>
