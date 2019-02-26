@@ -1,0 +1,12 @@
+.group-info ul{
+    list-style-type: none;
+  overflow: hidden;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.group-info ul li{
+    float: left;
+    padding: 10px;
+  
+  }
