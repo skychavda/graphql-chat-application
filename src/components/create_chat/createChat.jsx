@@ -379,7 +379,7 @@ class CreateChat extends React.Component {
                     <div className="chat-about">
                         <div className="chat-with" onClick={
                             (e) => this.handleGroupInfo(e)
-                        }>{this.state.groupInfo === true ? "Group-Info" :this.props.receiverName}</div>
+                        }>{this.state.groupInfo === true ? "Group-Info" : this.props.receiverName}</div>
                     </div>
                 </div>
                 {this.state.hideChatBox && <ScrollToBottom className="msj-rta macro">
@@ -423,7 +423,7 @@ class CreateChat extends React.Component {
                         </div>
                     )}
                 </Mutation>}
-                {this.state.groupInfo && <GroupInfo chatRoomID={this.props.chatRoomID} memberID={this.props.memberID}/>}
+                {this.state.groupInfo && <GroupInfo chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName}/>}
             </div>
         );
     }
