@@ -64,25 +64,12 @@ const MEMBER_LIST_BY_CHATROOM = gql`
 
 const CHAT_ROOM_LIST_SUBSCRIPTION = gql`
     subscription chatRoomListByMember($memberID:ID!){
-    chatRoomListByMember(memberID:$memberID){
-        chatRoomID
-        creatorID
-        creator{
-        id
-        userName
+        chatRoomListByMember(memberID:$memberID){
+            chatRoomID
+            name
+            chatRoomType
+            createdAt
         }
-        chatRoomName
-        chatRoomType
-        members{
-        id
-        chatRoomID
-        member{
-            id
-            userName
-        }
-        }
-        createdAt
-    }
     }
 `;
 
@@ -187,7 +174,7 @@ class ShowUser extends React.Component {
     componentDidUpdate(prev) {
         // this.addNewMessageSubscription.unsubscribe();
         if (this.state.receiverName !== prev.receiverName) {
-            // this.enableNewMemberSubscription();
+            this.enableNewMemberSubscription();
         }
     }
 
@@ -199,23 +186,24 @@ class ShowUser extends React.Component {
                 if (!subscriptionData.data) return prev;
                 const newMember = subscriptionData.data.chatRoomListByMember;
                 console.log('Line ---- 189', newMember);
+                this.setState({chatRoomUserList: newMember, filterUserList: newMember})
             }
         })
 
-        this.props.data.subscribeToMore({
-            document: DELETE_CHAT_SUBSCRIPTION,
-            variables: { chatRoomID: this.state.chatRoomID },
-            updateQuery: (prev, { subscriptionData }) => {
-                if (!subscriptionData.data) return prev;
-                const deletedChat = subscriptionData.data.chatDelete;
-                console.log('Line ---- 149', deletedChat);
-                // const userIndex = userList.findIndex(userList => userList.id === newName.id)
-                // if (userIndex > -1) {
-                //     userList.push(newName)
-                //     this.setState({ userList })
-                // }
-            }
-        })
+        // this.props.data.subscribeToMore({
+        //     document: DELETE_CHAT_SUBSCRIPTION,
+        //     variables: { chatRoomID: this.state.chatRoomID },
+        //     updateQuery: (prev, { subscriptionData }) => {
+        //         if (!subscriptionData.data) return prev;
+        //         const deletedChat = subscriptionData.data.chatDelete;
+        //         console.log('Line ---- 149', deletedChat);
+        //         // const userIndex = userList.findIndex(userList => userList.id === newName.id)
+        //         // if (userIndex > -1) {
+        //         //     userList.push(newName)
+        //         //     this.setState({ userList })
+        //         // }
+        //     }
+        // })
     }
 
 
@@ -250,7 +238,7 @@ class ShowUser extends React.Component {
                 memberID: this.state.loginUser.id
             }
         });
-        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId })
+        // this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId })
     }
 
     filterUser(userName) {

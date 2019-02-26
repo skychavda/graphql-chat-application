@@ -4,6 +4,7 @@ import { gql } from "apollo-boost";
 import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
 import ScrollToBottom from 'react-scroll-to-bottom';
+import GroupInfo from '../group_info/groupinfo';
 
 // New schema query
 
@@ -168,12 +169,15 @@ class CreateChat extends React.Component {
             chatConversationId: '',
             emojiArray: ['🤣', '😊', '😂', '😍', '😁', '😉', '😎', '😜'],
             emoji: '',
-            emojiNumber: 0
+            emojiNumber: 0,
+            groupInfo: false,
+            hideChatBox: true
         };
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
         this.fetchMessageFromQuery = this.fetchMessageFromQuery.bind(this);
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
+        this.handleGroupInfo = this.handleGroupInfo.bind(this);
     }
 
     addNewMessageSubscription() {
@@ -315,12 +319,26 @@ class CreateChat extends React.Component {
         }
     }
 
+    messageUnfocused(messageId) {
+        const messages = this.state.messages.slice(0);
+        const foundIndex = messages.findIndex(message => message.messageId === messageId)
+        if (foundIndex > -1) {
+            let disabledHover = this.disableHover(messages);
+            disabledHover[foundIndex].isHover = false;
+            this.setState({ messages: disabledHover });
+        }
+    }
+
     // set hover flag to false
     disableHover(messages) {
         for (let i = 0; i < messages.length; i++) {
             messages[i].isHover = false;
         }
         return messages
+    }
+
+    handleGroupInfo(){
+        this.setState({hideChatBox: !this.state.hideChatBox, groupInfo: !this.state.groupInfo})
     }
 
     handleTextChange(e) {
@@ -359,10 +377,12 @@ class CreateChat extends React.Component {
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
                     <div className="chat-about">
-                        <div className="chat-with">{this.props.receiverName}</div>
+                        <div className="chat-with" onClick={
+                            (e) => this.handleGroupInfo(e)
+                        }>{this.state.groupInfo === true ? "Group-Info" :this.props.receiverName}</div>
                     </div>
                 </div>
-                <ScrollToBottom className="msj-rta macro">
+                {this.state.hideChatBox && <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
                         <div style={{ position: 'relative' }} key={i}>
                             <div className={(chat.sender.id === this.props.memberID && chat.isHover === true ? "edit-menu" : "display-none")}>
@@ -377,22 +397,24 @@ class CreateChat extends React.Component {
                                     }
                                 </ul>
                             </div>
-                            <div key={i} className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")}>
+                            <div className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")} onMouseEnter={() => this.messageFoucused(chat.messageId)} onMouseLeave={() => this.messageUnfocused(chat.messageId)}>
                                 <div key={chat.chatUserId}>
                                     {<Mutation mutation={UPDATE_MESSAGE}>
                                         {updateMessage => (
-                                            chat.isEditMode === true ? <input type="text" className="edit-text" onKeyPress={(e) => this.updateMessage(e, updateMessage, chat.messageId)} /> : <span className="parser" onMouseEnter={() => this.messageFoucused(chat.messageId)}><Parser data={chat.message} /></span>
+                                            chat.isEditMode === true ? <input type="text" className="edit-text" onKeyPress={(e) => this.updateMessage(e, updateMessage, chat.messageId)} /> : <span className="parser" >
+                                                <Parser data={chat.message} />
+                                            </span>
                                         )}
                                     </Mutation>}
                                 </div>
                             </div>
-                            {this.props.chatRoomType === 'GROUP' && <div key={i} className={"username " + (chat.sender.id === this.props.memberID ? "me" : "")}>
+                            {this.props.chatRoomType === 'GROUP' && <div className={"username " + (chat.sender.id === this.props.memberID ? "me" : "")}>
                                 <p>{chat.sender.userName}</p>
                             </div>}
                         </div>
                     ))}
-                </ScrollToBottom>
-                <Mutation mutation={NEW_MESSAGE}>
+                </ScrollToBottom>}
+                {this.state.hideChatBox && <Mutation mutation={NEW_MESSAGE}>
                     {newMessage => (
                         <div className="text-bar">
                             <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={"text-box " + (this.state.error === "none" ? "" : "input-error")} />
@@ -400,7 +422,8 @@ class CreateChat extends React.Component {
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>
                     )}
-                </Mutation>
+                </Mutation>}
+                {this.state.groupInfo && <GroupInfo chatRoomID={this.props.chatRoomID} memberID={this.props.memberID}/>}
             </div>
         );
     }

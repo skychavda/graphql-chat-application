@@ -101,7 +101,7 @@ class UserList extends React.Component {
         } else {
             const creatorID = this.props.loginUserDetalis.id;
             const result = await newGroupChatRoom({ variables: { creatorID: creatorID, chatRoomName: groupName, chatRoomType: chatRoomType, receiverID: groupMemberList } })
-            this.setState({ chatRoomID: result.data.newGroupchatRoom.chatRoomID, showUserList: false, inputError: false })
+            this.setState({ chatRoomID: result.data.newGroupchatRoom.chatRoomID, showUserList: false, inputError: false, groupNameText: false })
             this.props.onInitializeChat(this.state.chatRoomID, groupName, result.data.newGroupchatRoom.chatRoomType);
             this.props.handleShowChatDialog(e);
         }
