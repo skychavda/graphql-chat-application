@@ -26,6 +26,7 @@
   padding: 0;
   list-style-type: none;
   margin-bottom: 0;
+  position: relative;
 }
 
 .user-list .name {
@@ -115,7 +116,7 @@
   }
 }
 
-.del-icon{
+.user-list ul > button{
   position: absolute;
   right: 10px;
   top: 12px;

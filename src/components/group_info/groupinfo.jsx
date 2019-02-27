@@ -9,13 +9,16 @@ import './groupinfo.css';
 const MEMBER_LIST_BY_CHATROOM = gql`
     query memberListByChatRoomId($chatRoomID:ID!, $memberID:ID!){
     memberListByChatRoomId(chatRoomID:$chatRoomID,memberID:$memberID){
-        id
-        member{
+        memberCount
+        members{
             id
-            userName
+            chatRoomID
+            member{
+                id
+                userName
+            }
+            joinAt
         }
-        chatRoomID
-        joinAt
     }
 }
 `;
@@ -90,6 +93,7 @@ class GroupInfo extends React.Component {
                 chatRoomID: this.props.chatRoomID, memberID: this.props.memberID
             }
         })
+        console.log('Line ---- 96', result.data.memberListByChatRoomId);
         this.setState({ memberList: result.data.memberListByChatRoomId })
     }
 
@@ -137,8 +141,12 @@ class GroupInfo extends React.Component {
 
     render() {
         const memberList = this.state.memberList;
+        // console.log('Line ---- 143',memberList);
+        const {data} = this.props;
         const receiverName = this.state.receiverName;
         const list = this.state.filterUserList;
+        if (this.props.data.loading) return 'loading';
+        if (this.props.data.loading) return 'error';
         return (
             <div className="group-info row">
                 <div className="col-md-6">
@@ -155,14 +163,14 @@ class GroupInfo extends React.Component {
                         </ul>
                     </div>
                     <div className="participent-list">
-                        <div className="participent-title">Participents</div>
+                        <div className="participent-title">Participents <span style={{float:'right'}}>{data.memberListByChatRoomId.memberCount}</span></div>
                         <div className="participent-name">
                             <ul>
                                 <li>
-                                    {memberList.map((list, i) => (
-                                        <div>
+                                    {data.memberListByChatRoomId.members.map((list) => (
+                                        <div key={list.id}>
                                             <ProfileUser userName={list.member.userName} />
-                                            <div key={i} className="names">{list.member.userName}</div>
+                                            <div key={list.id} className="names">{list.member.userName}</div>
                                         </div>
                                     ))}
                                 </li>
@@ -200,6 +208,12 @@ class GroupInfo extends React.Component {
                                         <button style={{ textTransform: 'uppercase' }} className="btn btn-outline-primary btn-md" onClick={(e) => this.handleAddMember(e, newChatRoomMembers)}>add member</button>
                                     )}
                                 </Mutation>
+                                <Mutation mutation={NEW_CHAT_ROOM_MEMBER}>
+                                    {newChatRoomMembers => (
+                                        <button style={{ textTransform: 'uppercase' }} className="btn btn-outline-primary btn-md" onClick={(e) => this.handleAddMember(e, newChatRoomMembers)}>Leave chat room</button>
+                                    )}
+                                </Mutation>
+                                {/* <button className="btn btn-outline-primary btn-md">Leave chat room</button> */}
                             </div>
                         </Scrollbars>
                     </div>
@@ -212,5 +226,5 @@ class GroupInfo extends React.Component {
 export default compose(
     graphql(UPDATE_CHAT_ROOM_DETAILS, { name: 'updateChatRoomDetails' }),
     graphql(NEW_CHAT_ROOM_MEMBER, { name: 'newChatRoomMember' }),
-    graphql(MEMBER_LIST_BY_CHATROOM),
+    graphql(MEMBER_LIST_BY_CHATROOM, { options: (props) => ({ variables: { chatRoomID: props.chatRoomID, memberID: props.memberID } }) }),
     withApollo)(GroupInfo);

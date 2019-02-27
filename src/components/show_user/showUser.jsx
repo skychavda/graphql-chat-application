@@ -43,21 +43,16 @@ const CHAT_ROOM_LIST = gql`
             chatRoomID
             name
             chatRoomType 
+            totalMember
             createdAt
         }
     }
 `;
 
 const MEMBER_LIST_BY_CHATROOM = gql`
-    query memberListByChatRoomId($chatRoomID:ID!,$memberID:ID!){
+    query memberListByChatRoomId($chatRoomID:ID!, $memberID:ID!){
     memberListByChatRoomId(chatRoomID:$chatRoomID,memberID:$memberID){
-        id
-        chatRoomID
-        member{
-            id
-            userName
-        }
-        joinAt  
+        memberCount
     }
 }
 `;
@@ -256,16 +251,19 @@ class ShowUser extends React.Component {
                                                         <ProfileUser userName={user.name} />
                                                         <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name, user.chatRoomType)}>
                                                             {user.name}
+                                                            
                                                         </div>
-                                                        <Mutation mutation={DELETE_CHAT_ROOM}>
-                                                            {deleteChatRoom => (
-                                                                <button className="del-icon btn btn-outline-danger btn-sm" onClick={(e) => this.deleteRoom(e, user.chatRoomID, this.state.loginUser.id, deleteChatRoom)}><i className="fas fa-trash-alt"></i></button>
-                                                            )}
-                                                        </Mutation>
+                                                        {user.chatRoomType === 'GROUP' ? user.totalMember:""}
                                                     </div>
                                                 </div>
                                             </li>
+                                            <Mutation mutation={DELETE_CHAT_ROOM}>
+                                                {deleteChatRoom => (
+                                                    <button className="del-icon btn btn-outline-danger btn-sm" onClick={(e) => this.deleteRoom(e, user.chatRoomID, this.state.loginUser.id, deleteChatRoom)}><i className="fas fa-trash-alt"></i></button>
+                                                )}
+                                            </Mutation>
                                         </ul>
+
                                     ))}
                                 </Scrollbars>
                             </div>

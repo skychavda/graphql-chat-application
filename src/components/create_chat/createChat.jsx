@@ -399,7 +399,7 @@ class CreateChat extends React.Component {
                 </div>
                 {this.state.hideChatBox && <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
-                        <div style={{ position: 'relative' }} key={i}>
+                        <div style={{ position: 'relative' }} key={chat.messageId}>
                             <div className={(chat.sender.id === this.props.memberID && chat.isHover === true ? "edit-menu" : "display-none")}>
                                 <ul>
                                     <li className="icon icon-edit" onClick={() => this.selectMessage(chat.messageId)}><i className="fas fa-edit"></i></li>
@@ -412,7 +412,7 @@ class CreateChat extends React.Component {
                                     }
                                 </ul>
                             </div>
-                            <div key={i} className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")}>
+                            <div key={chat.messageId} className={"message " + (chat.sender.id === this.props.memberID ? "me" : "")}>
                                 <div key={chat.chatUserId}>
                                     {<Mutation mutation={UPDATE_MESSAGE}>
                                         {updateMessage => (
