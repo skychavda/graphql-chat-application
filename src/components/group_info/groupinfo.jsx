@@ -56,6 +56,24 @@ const NEW_CHAT_ROOM_MEMBER = gql`
     }
 `;
 
+const LEAVE_CHAT_ROOM = gql`
+    mutation leaveChatRoom($chatRoomID:ID!, $memberID:ID!){
+    leaveChatRoom(input:{
+        chatRoomID:$chatRoomID,
+        memberID:$memberID
+    }){
+        chatRoomID
+        creatorID
+        creator{
+        id
+        userName
+        }
+        chatRoomName
+        chatRoomType
+    }
+    }
+`;
+
 const groupMemberList = [];
 
 class GroupInfo extends React.Component {
@@ -139,10 +157,14 @@ class GroupInfo extends React.Component {
         e.preventDefault();
     }
 
+    handleLeaveChatRoom(leaveChatRoom) {
+        leaveChatRoom({ variables: { chatRoomID: this.props.chatRoomID, memberID: this.props.memberID } });
+    }
+
     render() {
         const memberList = this.state.memberList;
         // console.log('Line ---- 143',memberList);
-        const {data} = this.props;
+        const { data } = this.props;
         const receiverName = this.state.receiverName;
         const list = this.state.filterUserList;
         if (this.props.data.loading) return 'loading';
@@ -163,7 +185,7 @@ class GroupInfo extends React.Component {
                         </ul>
                     </div>
                     <div className="participent-list">
-                        <div className="participent-title">Participents <span style={{float:'right'}}>{data.memberListByChatRoomId.memberCount}</span></div>
+                        <div className="participent-title">Participents <span style={{ float: 'right' }}>{data.memberListByChatRoomId.memberCount}</span></div>
                         <div className="participent-name">
                             <ul>
                                 <li>
@@ -178,7 +200,14 @@ class GroupInfo extends React.Component {
                         </div>
                     </div>
                     <div>
-                        <div style={{ textAlign: 'center', margin: '10px auto' }}><button className="btn btn-md btn-outline-primary" onClick={() => this.addParticipent()}>Add participent</button></div>
+                        <div style={{ textAlign: 'center', margin: '10px auto' }}>
+                            <button className="btn btn-md btn-outline-primary" onClick={() => this.addParticipent()}>Add participent</button>
+                            <Mutation mutation={LEAVE_CHAT_ROOM}>
+                                {leaveChatRoom => (
+                                    <button style={{ marginTop: '10px' }} className="btn btn-outline-danger btn-md" onClick={() => this.handleLeaveChatRoom(leaveChatRoom)}>Leave chat room</button>
+                                )}
+                            </Mutation>
+                        </div>
                     </div>
                 </div>
                 {
@@ -206,11 +235,6 @@ class GroupInfo extends React.Component {
                                 <Mutation mutation={NEW_CHAT_ROOM_MEMBER}>
                                     {newChatRoomMembers => (
                                         <button style={{ textTransform: 'uppercase' }} className="btn btn-outline-primary btn-md" onClick={(e) => this.handleAddMember(e, newChatRoomMembers)}>add member</button>
-                                    )}
-                                </Mutation>
-                                <Mutation mutation={NEW_CHAT_ROOM_MEMBER}>
-                                    {newChatRoomMembers => (
-                                        <button style={{ textTransform: 'uppercase' }} className="btn btn-outline-primary btn-md" onClick={(e) => this.handleAddMember(e, newChatRoomMembers)}>Leave chat room</button>
                                     )}
                                 </Mutation>
                                 {/* <button className="btn btn-outline-primary btn-md">Leave chat room</button> */}

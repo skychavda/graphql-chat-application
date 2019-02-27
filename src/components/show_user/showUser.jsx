@@ -43,7 +43,7 @@ const CHAT_ROOM_LIST = gql`
             chatRoomID
             name
             chatRoomType 
-            totalMember
+            # totalMember
             createdAt
         }
     }
@@ -253,7 +253,7 @@ class ShowUser extends React.Component {
                                                             {user.name}
                                                             
                                                         </div>
-                                                        {user.chatRoomType === 'GROUP' ? user.totalMember:""}
+                                                        {/* {user.chatRoomType === 'GROUP' ? user.totalMember:""} */}
                                                     </div>
                                                 </div>
                                             </li>
