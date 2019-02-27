@@ -4,6 +4,7 @@ import { gql } from "apollo-boost";
 import { Picker, Parser } from 'mr-emoji';
 import './createchat.css';
 import ScrollToBottom from 'react-scroll-to-bottom';
+import GroupInfo from '../group_info/groupinfo';
 
 // New schema query
 
@@ -54,6 +55,8 @@ const MESSAGE_POST_SUBSCRIPTION = gql`
     subscription messagePost($chatRoomID:ID!){
         messagePost(chatRoomID:$chatRoomID){
         messageId
+        chatRoomID
+        senderID
         sender{
             id 
             userName
@@ -168,15 +171,20 @@ class CreateChat extends React.Component {
             chatConversationId: '',
             emojiArray: ['🤣', '😊', '😂', '😍', '😁', '😉', '😎', '😜'],
             emoji: '',
-            emojiNumber: 0
+            emojiNumber: 0,
+            first: true,
+            groupInfo: false,
+            hideChatBox: true
         };
         this.sendMessage = this.sendMessage.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
         this.fetchMessageFromQuery = this.fetchMessageFromQuery.bind(this);
         this.addNewMessageSubscription = this.addNewMessageSubscription.bind(this);
+        this.handleGroupInfo = this.handleGroupInfo.bind(this);
     }
 
     addNewMessageSubscription() {
+        this.props.client.cache.reset();
         //subscription for add new message  
         this.props.data.subscribeToMore({
             document: MESSAGE_POST_SUBSCRIPTION,
@@ -184,12 +192,30 @@ class CreateChat extends React.Component {
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData) return prev;
                 const message = this.state.messages;
+                prev = message;
                 const newMessage = subscriptionData.data.messagePost;
-                message.push(newMessage);
-                this.setState({ message });
+                const anotherUserSubscription = prev.find(
+                    user => user.chatRoomID === newMessage.chatRoomID
+                )
+
+                if(prev.length === 0){
+                    const result = Object.assign({}, prev, {
+                        chatconversationByChatRoomId: [...prev, newMessage]
+                    });
+                    this.setState({ messages: result.chatconversationByChatRoomId })
+                }
+                if (!anotherUserSubscription || newMessage.messageId === prev[prev.length - 1].messageId ) {
+                    return prev;
+                } else {
+                    const result = Object.assign({}, prev, {
+                        chatconversationByChatRoomId: [...prev, newMessage]
+                    });
+                    this.setState({ messages: result.chatconversationByChatRoomId })
+                }
             }
         })
     }
+
     componentDidMount() {
 
         this.addNewMessageSubscription();
@@ -229,10 +255,12 @@ class CreateChat extends React.Component {
     }
 
     componentDidUpdate(prev) {
-        // this.addNewMessageSubscription.unsubscribe();
-        if (this.props.chatRoomID !== prev.chatRoomID) {
+        const { first } = this.state;
+        if (this.props.chatRoomID !== prev.chatRoomID || first) {
             this.fetchMessageFromQuery();
-            this.addNewMessageSubscription();
+            // this.addNewMessageSubscription();
+            this.componentDidMount();
+            this.setState({ first: false, groupInfo: false, hideChatBox: true });
         }
     }
 
@@ -323,6 +351,10 @@ class CreateChat extends React.Component {
         return messages
     }
 
+    handleGroupInfo() {
+        this.setState({ hideChatBox: !this.state.hideChatBox, groupInfo: !this.state.groupInfo })
+    }
+
     handleTextChange(e) {
         this.setState({ text: e.target.value });
     }
@@ -354,15 +386,18 @@ class CreateChat extends React.Component {
         if (data.loading) return 'Loading';
         if (data.error) return `${data.error}`;
         let messages = this.state.messages;
+        // console.log('Line ---- 393',messages);
         const emoji = this.state.emojiArray[this.state.emojiNumber];
         return (
             <div className={"chat col-md-8 col-lg-9 "}>
                 <div className="chat-header">
                     <div className="chat-about">
-                        <div className="chat-with">{this.props.receiverName}</div>
+                        <div className="chat-with" onClick={this.props.chatRoomType === 'GROUP' ? (e) => this.handleGroupInfo(e) : null}>
+                            {this.state.groupInfo === true ? "Group-Info" : this.props.receiverName}
+                        </div>
                     </div>
                 </div>
-                <ScrollToBottom className="msj-rta macro">
+                {this.state.hideChatBox && <ScrollToBottom className="msj-rta macro">
                     {messages.map((chat, i) => (
                         <div style={{ position: 'relative' }} key={i}>
                             <div className={(chat.sender.id === this.props.memberID && chat.isHover === true ? "edit-menu" : "display-none")}>
@@ -391,8 +426,8 @@ class CreateChat extends React.Component {
                             </div>}
                         </div>
                     ))}
-                </ScrollToBottom>
-                <Mutation mutation={NEW_MESSAGE}>
+                </ScrollToBottom>}
+                {this.state.hideChatBox && <Mutation mutation={NEW_MESSAGE}>
                     {newMessage => (
                         <div className="text-bar">
                             <input type="text" ref={(mess) => { this.messageInput = mess; }} placeholder="Enter text.." value={this.state.text} onChange={(e) => this.handleTextChange(e)} onKeyPress={(e) => this.sendMessage(e, newMessage)} className={"text-box " + (this.state.error === "none" ? "" : "input-error")} />
@@ -400,7 +435,8 @@ class CreateChat extends React.Component {
                             {this.state.emojiShown === true ? <EmojiTable handleOnClick={this.handleEmojiClick} /> : null}
                         </div>
                     )}
-                </Mutation>
+                </Mutation>}
+                {this.state.groupInfo && <GroupInfo list={this.props.list} chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName} />}
             </div>
         );
     }

@@ -48,7 +48,8 @@ class App extends Component {
       email: '',
       number: '',
       bio: '',
-      popupShow: false
+      popupShow: false,
+      errorMessage: ''
     }
     this.removeUser = this.removeUser.bind(this);
     this.handleUserName = this.handleUserName.bind(this);
@@ -59,6 +60,7 @@ class App extends Component {
     this.handleBio = this.handleBio.bind(this);
     this.handleNotAMember = this.handleNotAMember.bind(this);
     this.closePopup = this.closePopup.bind(this);
+    this.loginFail = this.loginFail.bind(this);
   }
 
   componentDidMount() {
@@ -66,6 +68,11 @@ class App extends Component {
     if (user !== undefined) {
       this.setState({ user: user, displayShowUser: true, triggerShowUser: true, displayLogin: 'show', displayContainer: false });
     }
+  }
+
+  loginFail(errorMessage){
+    cookies.remove('loginUser');
+    this.setState({ user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true, popupShow: true, errorMessage: errorMessage });
   }
 
   removeUser() {
@@ -148,10 +155,10 @@ class App extends Component {
   }
 
   render() {
-    const user = this.state.user;
+    const {user, errorMessage} = this.state;
     return (
       <div className="main-div-chat">
-        {this.state.popupShow && <Popup onClosePopup = {this.closePopup}/>}
+        {this.state.popupShow && <Popup onClosePopup = {this.closePopup} errorMessage={errorMessage}/>}
         {this.state.displayContainer && <div className={"container-login100 "}>
           <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displaySignup === "show" ? "" : "hidden")}>
             <div className="login100-form validate-form">
@@ -228,7 +235,7 @@ class App extends Component {
             </div>
           </div>
         </div >}
-        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} />}
+        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} onLoginFail={this.loginFail}/>}
       </div>
     );
   }

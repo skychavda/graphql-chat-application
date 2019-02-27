@@ -116,5 +116,7 @@
 }
 
 .del-icon{
-  float: right;
+  position: absolute;
+  right: 10px;
+  top: 12px;
 }

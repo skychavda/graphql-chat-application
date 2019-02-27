@@ -22,6 +22,6 @@
     background: white;
 }
 .popup_content{
-    position: relative;
-    top: 36%;
+    position: absolute;
+    top: 50%;
 }
