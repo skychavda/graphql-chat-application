@@ -18,7 +18,13 @@ class ProfileUser extends React.Component {
 
     extractFirstName() {
         const data = this.props.userName;
-        const firstName = data.charAt(0);
+        let firstName;
+        if(data===null){
+            firstName = null;
+        }else{
+            firstName = data.charAt(0);
+        }
+        
         return firstName;
     }
 

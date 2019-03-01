@@ -77,7 +77,7 @@ class UserList extends React.Component {
             groupName: '',
             receiverID: [],
             groupNameText: false,
-            inputError : false
+            inputError: false
         }
         this.filterUser = this.filterUser.bind(this);
         this.handleGroupName = this.handleGroupName.bind(this);
@@ -97,7 +97,7 @@ class UserList extends React.Component {
     handleGroupChat = async (e, chatRoomType, newGroupChatRoom) => {
         const groupName = this.state.groupName;
         if (groupName === "") {
-            this.setState({inputError: true})
+            this.setState({ inputError: true })
         } else {
             const creatorID = this.props.loginUserDetalis.id;
             const result = await newGroupChatRoom({ variables: { creatorID: creatorID, chatRoomName: groupName, chatRoomType: chatRoomType, receiverID: groupMemberList } })
@@ -109,9 +109,8 @@ class UserList extends React.Component {
 
     handlePrivateChat = async (e, userId, chatRoomType, newPrivateChatRoom) => {
         const creatorID = this.props.loginUserDetalis.id;
-        const result = await newPrivateChatRoom({ variables: { creatorID: creatorID, chatRoomType: chatRoomType, receiverID: userId } })
-        this.setState({ chatRoomID: result.data.newPrivateChatRoom.chatRoomID, showUserList: false })
-        console.log('Line ---- 109', result);
+        const result = await newPrivateChatRoom({ variables: { creatorID: creatorID, chatRoomType: chatRoomType, receiverID: userId } });
+        this.setState({ chatRoomID: result.data.newPrivateChatRoom.chatRoomID, showUserList: false });
         this.props.onInitializeChat(this.state.chatRoomID, result.data.newPrivateChatRoom.members[1].member.userName, result.data.newPrivateChatRoom.chatRoomType);
         this.props.handleShowChatDialog(e);
     }
@@ -170,7 +169,7 @@ class UserList extends React.Component {
                 <div className="btn-container">
                     <button className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleNewChatDialog(e)}>New Chat</button>
                     <button style={{ marginLeft: '15px' }} className="btn btn-outline-secondary btn-md" onClick={(e) => this.handleGroupChatDialog(e)}>Create Group</button>
-                    {this.state.groupNameText && <input className={"group-text-box "+(this.state.inputError === false ? "" : "input-error")} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
+                    {this.state.groupNameText && <input className={"group-text-box " + (this.state.inputError === false ? "" : "input-error")} placeholder="Enter group name" onChange={(e) => this.handleGroupName(e)} />}
                     {this.state.showUserList && <div className="close" onClick={() => this.closeDialogList()}>&times;</div>}
                 </div>
                 {this.state.showUserList && <div className="user-list-box ">
@@ -185,7 +184,7 @@ class UserList extends React.Component {
                                             {newPrivateChatRoom => (
                                                 <div className={"name "} key={user.id} onClick={this.state.showGroupChat === false ? (e) => this.handlePrivateChat(e, user.id, 'PRIVATE', newPrivateChatRoom) : (e) => this.addUserToGroupList(e, user.id)}>
                                                     {user.userName}
-                                                    {this.state.showGroupChat && <div className={user.isChecked === true ? "arrow" : "check-box"}></div>}
+                                                    {this.state.showGroupChat && <div className={user.isChecked === true ? "arraw" : "check-box"}></div>}
                                                 </div>
                                             )}
                                         </Mutation>}

@@ -3,6 +3,7 @@ import { Mutation, compose, graphql, withApollo, Query } from "react-apollo";
 import gql from "graphql-tag";
 import './showuser.css';
 import { Scrollbars } from 'react-custom-scrollbars';
+import isEqual from 'lodash.isequal';
 
 import CreateChat from '../create_chat/createChat';
 import SearchUser from '../search_user/searchuser';
@@ -43,18 +44,10 @@ const CHAT_ROOM_LIST = gql`
             chatRoomID
             name
             chatRoomType 
-            # totalMember
             createdAt
+            totalMember
         }
     }
-`;
-
-const MEMBER_LIST_BY_CHATROOM = gql`
-    query memberListByChatRoomId($chatRoomID:ID!, $memberID:ID!){
-    memberListByChatRoomId(chatRoomID:$chatRoomID,memberID:$memberID){
-        memberCount
-    }
-}
 `;
 
 const CHAT_ROOM_LIST_SUBSCRIPTION = gql`
@@ -64,6 +57,7 @@ const CHAT_ROOM_LIST_SUBSCRIPTION = gql`
             name
             chatRoomType
             createdAt
+            totalMember
         }
     }
 `;
@@ -95,17 +89,28 @@ class ShowUser extends React.Component {
             showChat: true,
             chatRoomType: '',
             memberListShow: true,
-            loginError: ''
+            loginError: '',
+            newUserMessage: [],
+            creatorId: ''
         }
         this.initializeChat = this.initializeChat.bind(this);
         this.filterUser = this.filterUser.bind(this);
         this.handleHideChatDialog = this.handleHideChatDialog.bind(this);
         this.handleShowChatDialog = this.handleShowChatDialog.bind(this);
         this.enableNewMemberSubscription = this.enableNewMemberSubscription.bind(this);
+        this.leaveGroup = this.leaveGroup.bind(this);
     }
 
     async initializeChat(chatRoomID, name, chatRoomType) {
         this.setState({ chatRoomID: chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType: chatRoomType, memberListShow: false });
+        const { newUserMessage } = this.state;
+        let tempArray = [];
+        for (let i = 0; i < newUserMessage.length; i++) {
+            if (newUserMessage[i] !== chatRoomID) {
+                tempArray.push(newUserMessage[i]);
+            }
+        }
+        this.setState({ newUserMessage: tempArray })
         this.disable = true;
     }
 
@@ -132,10 +137,8 @@ class ShowUser extends React.Component {
         this.fetchLooginUserDetail();
     }
 
-    componentDidUpdate(prev) {
-        // this.addNewMessageSubscription.unsubscribe();
-        if (this.state.receiverName !== prev.receiverName) {
-            // this.enableNewMemberSubscription();
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.receiverName !== prevState.receiverName && this.state.receiverName!== '') {
             this.enableNewMemberSubscription();
         }
     }
@@ -146,10 +149,17 @@ class ShowUser extends React.Component {
             variables: { memberID: this.state.loginUser.id },
             updateQuery: (prev, { subscriptionData }) => {
                 if (!subscriptionData.data) return prev;
+                const { newUserMessage, chatRoomID } = this.state;
                 const newMember = subscriptionData.data.chatRoomListByMember;
-                this.setState({ chatRoomUserList: newMember, filterUserList: newMember })
+                if (!isEqual(this.state.filterUserList, newMember)) {
+                    if (newMember[0].chatRoomID !== chatRoomID) {
+                        newUserMessage.push(newMember[0].chatRoomID);
+                    }
+                }
+                this.setState({ chatRoomUserList: newMember, filterUserList: newMember, newUserMessage });
             }
         })
+
     }
 
 
@@ -189,7 +199,9 @@ class ShowUser extends React.Component {
                 memberID: this.state.loginUser.id
             }
         });
-        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId })
+        this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId }, function (){
+            this.enableNewMemberSubscription();
+        });
     }
 
     filterUser(userName) {
@@ -217,13 +229,56 @@ class ShowUser extends React.Component {
         this.setState({ showChat: true })
     }
 
+    // get count for repetated id
+    getCount(arr) {
+        var a = [], b = [], prev;
+        arr.sort();
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] !== prev) {
+                a.push(arr[i]);
+                b.push(1);
+            } else {
+                b[b.length - 1]++;
+            }
+            prev = arr[i];
+        }
+        return [a, b];
+    }
+
+    onNewMessageArrive(chatRoomID) {
+        const { newUserMessage } = this.state;
+        let m = this.getCount(newUserMessage);
+        let userIdArray = m[0];
+        let userCountArray = m[1];
+        let mainIndex;
+        for (let i = 0; i < userIdArray.length; i++) {
+            if (userIdArray[i] === chatRoomID) {
+                mainIndex = i;
+                break;
+            }
+        }
+        let mainCounter = userCountArray[mainIndex];
+        console.log('Line ---- 286', mainCounter);
+
+        for (let i = 0; i < newUserMessage.length; i++) {
+            if (newUserMessage[i] === chatRoomID) {
+                return (<span className={newUserMessage[i] === chatRoomID ? "newMessage" : ""}>{mainCounter}</span>);
+            }
+        }
+    }
+
+    leaveGroup() {
+        this.setState({ triggerCreateChat: false });
+    }
+
     render() {
         const data = this.props.data;
         if (data.loading) { return <div className="loader"></div>; }
         if (data.error) {
             this.props.onLoginFail(data.error.graphQLErrors[0].message);
+            console.log('user list');
         }
-        let userList = this.state.userList;
+        let { userList, newUserMessage } = this.state;
         let list = this.state.filterUserList;
         const loginUserDetails = this.state.loginUser;
         if (this.props.hidden) {
@@ -231,7 +286,7 @@ class ShowUser extends React.Component {
                 <div>
                     <UserList list={userList} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog} />
 
-                    {this.state.showChat && <div className="row">
+                    {this.state.showChat && <div className="row raw">
                         <div className="display-user col-md-4 col-lg-3">
                             <div className="user-title">
                                 <p className="float-left" style={{ marginBottom: 0 }}>Welcome {this.props.user}</p>
@@ -244,16 +299,15 @@ class ShowUser extends React.Component {
                                 <Scrollbars>
                                     {list.map((user, i) => (
                                         <ul className="list ripple" key={i} >
-                                            {/*  */}
                                             <li className={"clearfix " + (user.name === this.state.receiverName ? "user-name-active" : "")}>
                                                 <div className="about">
                                                     <div>
                                                         <ProfileUser userName={user.name} />
                                                         <div className={"name "} key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name, user.chatRoomType)}>
-                                                            {user.name}
-                                                            
+                                                            <p style={{ marginBottom: 0 }}>{user.name} {this.onNewMessageArrive(user.chatRoomID)}</p>
+                                                            {user.chatRoomType === 'GROUP' ? <p style={{ marginBottom: '0', fontSize: '13px', color: '#bfbfbf' }}>{user.totalMember} Members</p> : null}
                                                         </div>
-                                                        {/* {user.chatRoomType === 'GROUP' ? user.totalMember:""} */}
+
                                                     </div>
                                                 </div>
                                             </li>
@@ -269,7 +323,7 @@ class ShowUser extends React.Component {
                             </div>
 
                         </div>
-                        {this.state.triggerCreateChat && <CreateChat list={userList} chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} />}
+                        {this.state.triggerCreateChat && <CreateChat list={userList} chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} leaveGroup={this.leaveGroup} />}
                     </div>}
 
                 </div>

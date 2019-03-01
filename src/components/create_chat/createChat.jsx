@@ -384,7 +384,7 @@ class CreateChat extends React.Component {
     render() {
         const data = this.props.data;
         if (data.loading) return 'Loading';
-        if (data.error) return `${data.error}`;
+        if (data.error) return console.log('message display');
         let messages = this.state.messages;
         // console.log('Line ---- 393',messages);
         const emoji = this.state.emojiArray[this.state.emojiNumber];
@@ -436,7 +436,7 @@ class CreateChat extends React.Component {
                         </div>
                     )}
                 </Mutation>}
-                {this.state.groupInfo && <GroupInfo list={this.props.list} chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName} />}
+                {this.state.groupInfo && <GroupInfo list={this.props.list} chatRoomID={this.props.chatRoomID} memberID={this.props.memberID} receiverName={this.props.receiverName} onHandleGroupInfo={this.handleGroupInfo} onLeaveGroup={this.props.leaveGroup}/>}
             </div>
         );
     }
