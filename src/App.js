@@ -1,8 +1,8 @@
-import React, { Component } from "react";
-import { Mutation, graphql, compose } from "react-apollo";
-import gql from "graphql-tag";
+import React, { Component } from 'react';
+import { Mutation, graphql, compose } from 'react-apollo';
+import gql from 'graphql-tag';
 import Cookies from 'universal-cookie';
-import 'mr-emoji/css/emoji-mart.css'
+import 'mr-emoji/css/emoji-mart.css';
 
 import ShowUser from './components/show_user/showUser';
 import Popup from './components/popup/popup';
@@ -49,8 +49,8 @@ class App extends Component {
       number: '',
       bio: '',
       popupShow: false,
-      errorMessage: ''
-    }
+      errorMessage: '',
+    };
     this.removeUser = this.removeUser.bind(this);
     this.handleUserName = this.handleUserName.bind(this);
     this.handleFirstName = this.handleFirstName.bind(this);
@@ -64,27 +64,34 @@ class App extends Component {
   }
 
   componentDidMount() {
-    var user = cookies.get('loginUser');
+    const user = cookies.get('loginUser');
     if (user !== undefined) {
-      this.setState({ user: user, displayShowUser: true, triggerShowUser: true, displayLogin: 'show', displayContainer: false });
+      this.setState({
+        user, displayShowUser: true, triggerShowUser: true, displayLogin: 'show', displayContainer: false,
+      });
     }
   }
 
-  loginFail(errorMessage){
+  loginFail(errorMessage) {
     cookies.remove('loginUser');
-    this.setState({ user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true, popupShow: true, errorMessage: errorMessage });
+    this.setState({
+      user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true, popupShow: true, errorMessage,
+    });
   }
 
   removeUser() {
     cookies.remove('loginUser');
-    this.setState({ user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true });
+    this.setState({
+      user: '', displayShowUser: false, triggerShowUser: false, displayLogin: 'hidden', displayContainer: true,
+    });
   }
 
   async enterUser(e, joinUser) {
     if (e.key === 'Enter') {
-      if (e.target.value === "") {
+      if (e.target.value === '') {
         this.setState({ error: 'error' });
-      } else {
+      }
+      else {
         joinUser({ variables: { newUser: e.target.value } });
         this.setState({ error: 'none' });
         this.setState({ user: e.target.value, display: 'show', triggerShowUser: true });
@@ -95,29 +102,37 @@ class App extends Component {
   }
 
   async newUser(e, newUser) {
-    const userName = this.state.userName;
-    const firstName = this.state.firstName;
-    const lastName = this.state.lastName;
-    const number = this.state.number;
-    const email = this.state.email;
-    const bio = this.state.bio;
+    const { userName } = this.state;
+    const { firstName } = this.state;
+    const { lastName } = this.state;
+    const { number } = this.state;
+    const { email } = this.state;
+    const { bio } = this.state;
 
-    const result = await newUser({ variables: { userName: userName, firstName: firstName, lastName: lastName, email: email, contact: number, bio: bio } });
+    const result = await newUser({
+      variables: {
+        userName, firstName, lastName, email, contact: number, bio,
+      },
+    });
     if (result.data.newUser.id === '0') {
-      this.setState({ popupShow: !this.state.popupShow })
-    } else {
-      cookies.set('loginUser', userName);
-      this.setState({ user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: true, displayContainer: false, popupShow: false });
+      this.setState({ popupShow: !this.state.popupShow });
     }
-
+    else {
+      cookies.set('loginUser', userName);
+      this.setState({
+        user: userName, displaySignup: 'hidden', triggerShowUser: true, displayShowUser: true, displayContainer: false, popupShow: false,
+      });
+    }
   }
 
   async login(e) {
     if (e.key === 'Enter') {
-      const userName = this.state.userName;
+      const { userName } = this.state;
       cookies.set('loginUser', userName);
       console.log('Line ---- 108', userName);
-      this.setState({ user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: true, displayContainer: false });
+      this.setState({
+        user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: true, displayContainer: false,
+      });
       e.preventDefault();
     }
   }
@@ -150,60 +165,63 @@ class App extends Component {
     this.setState({ displayLogin: 'show', displaySignup: 'show' });
   }
 
-  closePopup(){
-    this.setState({popupShow: false})
+  closePopup() {
+    this.setState({ popupShow: false });
   }
 
   render() {
-    const {user, errorMessage} = this.state;
+    const { user, errorMessage } = this.state;
     return (
       <div className="main-div-chat">
-        {this.state.popupShow && <Popup onClosePopup = {this.closePopup} errorMessage={errorMessage}/>}
-        {this.state.displayContainer && <div className={"container-login100 "}>
-          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displaySignup === "show" ? "" : "hidden")}>
+        {this.state.popupShow && <Popup onClosePopup={this.closePopup} errorMessage={errorMessage} />}
+        {this.state.displayContainer && (
+        <div className="container-login100 ">
+          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${this.state.displaySignup === 'show' ? '' : 'hidden'}`}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Welcome to chat application
               </span>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your username" onChange={(e) => this.handleUserName(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your username" onChange={e => this.handleUserName(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your firstname" onChange={(e) => this.handleFirstName(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your firstname" onChange={e => this.handleFirstName(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your lastname" onChange={(e) => this.handleLastName(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your lastname" onChange={e => this.handleLastName(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your email" onChange={(e) => this.handleEmail(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your email" onChange={e => this.handleEmail(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your contact" onChange={(e) => this.handleContact(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your contact" onChange={e => this.handleContact(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your bio" onChange={(e) => this.handleBio(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your bio" onChange={e => this.handleBio(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="container-login100-form-btn">
                 <div className="wrap-login100-form-btn">
-                  <div className="login100-form-bgbtn"></div>
+                  <div className="login100-form-bgbtn" />
                   <Mutation mutation={NEW_USER}>
                     {newUser => (
-                      <button className="login100-form-btn" onClick={(e) => this.newUser(e, newUser)}>
+                      <button className="login100-form-btn" onClick={e => this.newUser(e, newUser)}>
                         Join Chat
-							        </button>
+
+                        {' '}
+                      </button>
                     )}
                   </Mutation>
                 </div>
@@ -212,21 +230,21 @@ class App extends Component {
               {/* <h6 onClick={this.alreadyMember}>Login</h6> */}
             </div>
           </div>
-          <div className={"wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 " + (this.state.displayLogin === "hidden" ? "" : "hidden")}>
+          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${this.state.displayLogin === 'hidden' ? '' : 'hidden'}`}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Login
-                </span>
+              </span>
 
               <div className="wrap-input100 validate-input m-b-23">
-                <input className="input100" type="text" placeholder="Type your username" onChange={(e) => this.handleUserName(e)} onKeyPress={(e) => this.login(e)} />
-                <span className="focus-input100"></span>
+                <input className="input100" type="text" placeholder="Type your username" onChange={e => this.handleUserName(e)} onKeyPress={e => this.login(e)} />
+                <span className="focus-input100" />
               </div>
 
               <div className="container-login100-form-btn">
                 <div className="wrap-login100-form-btn">
-                  <div className="login100-form-bgbtn"></div>
-                  <button className="login100-form-btn" onClick={(e) => this.login(e)}>
+                  <div className="login100-form-bgbtn" />
+                  <button className="login100-form-btn" onClick={e => this.login(e)}>
                     Login
                   </button>
                 </div>
@@ -234,8 +252,9 @@ class App extends Component {
               <h6 style={{ cursor: 'pointer' }} onClick={this.handleNotAMember}>Not a member?</h6>
             </div>
           </div>
-        </div >}
-        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} onLoginFail={this.loginFail}/>}
+        </div>
+        )}
+        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} onLoginFail={this.loginFail} />}
       </div>
     );
   }

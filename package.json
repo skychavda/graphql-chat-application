@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
+    "eslint": "^5.15.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.12.4",
     "react-scripts": "1.1.1"
   },
   "dependencies": {
@@ -12,6 +17,7 @@
     "graphql-tag": "^2.10.1",
     "lodash.isequal": "^4.5.0",
     "mr-emoji": "^1.1.4",
+    "prop-types": "^15.7.2",
     "react": "^16.4.0",
     "react-apollo": "^2.1.1",
     "react-app-polyfill": "^0.2.1",
@@ -25,6 +31,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .jsx --ext .js",
+    "lint-fix": "eslint --fix src --ext .jsx --ext .js"
   }
 }
