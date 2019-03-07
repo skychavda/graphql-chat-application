@@ -1,0 +1,75 @@
+.check-box{
+  height: 20px;
+  width: 20px;
+  float: right;
+  margin: 10px 2px;
+  border: 1px solid #cfcfcf;
+  transition: all .3s ease;
+}
+
+.arraw{
+  height: 20px;
+  width: 12px;
+  float: right;
+  margin: 10px 2px;
+  border: 1px solid #39c527;
+  transform: rotate(33deg);
+  border-top: 0;
+  border-left: 0;
+  transition: all .3s ease;
+}
+
+.user-list-box{
+  width: 50%;
+  border: 1px solid #dfdfdf;
+  margin: 2% 0 0 45px;
+}
+
+.user-list-box {
+  ul{
+    padding: 0;
+    list-style-type: none;
+    margin-bottom: 0;
+  }
+}
+
+.user-list-box {
+  .name {
+    padding-left: 0px;
+  }
+}
+
+.ripple {
+  background-position: center;
+  transition: background 0.8s;
+  border-bottom: 1px solid #dfdfdf;
+}
+.ripple:hover {
+  background: #dfdfdf radial-gradient(circle, transparent 1%, #dfdfdf 1%) center/15000%;
+  cursor: pointer;
+}
+.ripple:active {
+  background-color: #efefef;
+  background-size: 100%;
+  transition: background 0s;
+}
+
+.btn-container{
+  width: 50%;
+  margin: 3% 0 0 45px;
+}
+
+.close{
+  float: right;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.group-text-box{
+  margin-left: 15px;
+  outline: none;
+  border: 1px solid;
+  padding: .375rem .75rem;
+  border-radius: 4px;
+  vertical-align: middle;
+}

@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  Mutation, compose, graphql, withApollo, Query,
+  Mutation, compose, graphql, withApollo,
 } from 'react-apollo';
 import gql from 'graphql-tag';
-import './showuser.css';
+import PropTypes from 'prop-types';
 import { Scrollbars } from 'react-custom-scrollbars';
 import isEqual from 'lodash.isequal';
 
@@ -13,8 +13,8 @@ import ProfileUser from '../profile_user/profileuser';
 import UserList from '../user_list/userlist';
 
 const SHOW_USER = gql`
-  query users($user:String!){
-    users(name:$user){
+  query users($name:String!){
+    users(name:$name){
       id
       userName
       firstName
@@ -73,28 +73,13 @@ const DELETE_CHAT_ROOM = gql`
     }
 `;
 
-const USER_JOIN_SUBSCRIPTION = gql`
-    subscription{
-        userJoined{
-            id
-            userName
-            firstName
-            lastName
-            email
-            contact
-        }
-    }
-`;
-
 class ShowUser extends React.Component {
   constructor(props) {
     super(props);
     this.messagesList = React.createRef();
     this.state = {
       receiverName: '',
-      display: 'hidden',
       triggerCreateChat: false,
-      subscribedNewUser: false,
       userList: [],
       filterUserList: [],
       loginUser: [],
@@ -103,10 +88,10 @@ class ShowUser extends React.Component {
       memberID: '',
       showChat: true,
       chatRoomType: '',
-      memberListShow: true,
       loginError: '',
       newUserMessage: [],
-      creatorId: '',
+      first: false,
+      colors: ['#bccad6', '#8d9db6', '#667292', '#054158', '#054f7c', '#1f6aa3', '#6494b1', '#c2d5e3'],
     };
     this.initializeChat = this.initializeChat.bind(this);
     this.filterUser = this.filterUser.bind(this);
@@ -116,88 +101,84 @@ class ShowUser extends React.Component {
     this.leaveGroup = this.leaveGroup.bind(this);
   }
 
-  async initializeChat(chatRoomID, name, chatRoomType) {
-    this.setState({
-      chatRoomID, memberID: this.state.loginUser.id, receiverName: name, display: 'show', triggerCreateChat: true, chatRoomType, memberListShow: false,
-    });
-    const { newUserMessage } = this.state;
-    const tempArray = [];
-    for (let i = 0; i < newUserMessage.length; i++) {
-      if (newUserMessage[i] !== chatRoomID) {
-        tempArray.push(newUserMessage[i]);
-      }
-    }
-    this.setState({ newUserMessage: tempArray });
-    this.disable = true;
-  }
-
   componentDidMount() {
-    this.props.data.subscribeToMore({
-      document: USER_JOIN_SUBSCRIPTION,
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        const userList = this.state.filterUserList;
-        const newName = subscriptionData.data.userJoined;
-        console.log('Line ---- 68', newName);
-        const userIndex = userList.findIndex(userList => userList.id === newName.id);
-        if (userIndex > -1) {
-          userList.push(newName);
-          this.setState({ userList });
-        }
-      },
-    });
     this.fetchUserFromQuery();
     this.fetchLooginUserDetail();
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.receiverName !== prevState.receiverName && this.state.receiverName !== '') {
-      this.enableNewMemberSubscription();
+  // componentDidUpdate(prevProps, prevState) {
+  //   const { receiverName } = this.state;
+  //   if (receiverName !== prevState.receiverName && receiverName !== '') {
+  //     // this.enableNewMemberSubscription();
+  //   }
+  // }
+
+  onNewMessageArrive(chatRoomID) {
+    const { newUserMessage } = this.state;
+    const m = this.getCount(newUserMessage);
+    const userIdArray = m[0];
+    const userCountArray = m[1];
+    let mainIndex;
+    for (let i = 0; i < userIdArray.length; i++) {
+      if (userIdArray[i] === chatRoomID) {
+        mainIndex = i;
+        break;
+      }
+    }
+    const mainCounter = userCountArray[mainIndex];
+    for (let i = 0; i < newUserMessage.length; i++) {
+      if (newUserMessage[i] === chatRoomID) {
+        return (<span className={newUserMessage[i] === chatRoomID ? 'newMessage' : ''}>{mainCounter}</span>);
+      }
     }
   }
 
-  enableNewMemberSubscription() {
-    this.props.data.subscribeToMore({
-      document: CHAT_ROOM_LIST_SUBSCRIPTION,
-      variables: { memberID: this.state.loginUser.id },
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        const { newUserMessage, chatRoomID } = this.state;
-        const newMember = subscriptionData.data.chatRoomListByMember;
-        console.log('Line ---- 163', this.state.filterUserList);
-        console.log('Line ---- 164', newMember);
-        if (!isEqual(this.state.filterUserList, newMember)) {
-          if (newMember[0].chatRoomID !== chatRoomID) {
-            newUserMessage.push(newMember[0].chatRoomID);
-          }
-        }
-        this.setState({ chatRoomUserList: newMember, filterUserList: newMember, newUserMessage });
-      },
-    });
+  // get count for repetated id
+  getCount = (arr) => {
+    const a = []; const b = [];
+    let prev;
+    arr.sort();
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] !== prev) {
+        a.push(arr[i]);
+        b.push(1);
+      }
+      else {
+        b[b.length - 1] += 1;
+      }
+      prev = arr[i];
+    }
+    return [a, b];
   }
 
     fetchUserFromQuery = async () => {
-      const { client } = this.props;
+      const { client, user } = this.props;
       const result = await client.query({
         query: SHOW_USER,
         variables: {
-          user: this.props.user,
+          name: user,
         },
       });
       this.setState({ userList: result.data.users });
     }
 
+    deleteRoom = async (e, chatRoomID, memberID, deleteChatRoom) => {
+      deleteChatRoom({ variables: { chatRoomID, memberID } });
+      e.preventDefault();
+    }
+
     fetchLooginUserDetail = async () => {
-      const { client } = this.props;
+      const { client, user, onLoginFail } = this.props;
+      const { loginError } = this.state;
       const result = await client.query({
         query: USER_LOGIN,
         variables: {
-          name: this.props.user,
+          name: user,
         },
       });
       if (result.data.MemberLogIn === null) {
         this.setState({ loginError: result.errors });
-        this.props.onLoginFail(this.state.loginError);
+        onLoginFail(loginError);
       }
       else {
         this.setState({ loginUser: result.data.MemberLogIn });
@@ -207,10 +188,11 @@ class ShowUser extends React.Component {
 
     fetchRoomList = async () => {
       const { client } = this.props;
+      const { loginUser } = this.state;
       const result = await client.query({
         query: CHAT_ROOM_LIST,
         variables: {
-          memberID: this.state.loginUser.id,
+          memberID: loginUser.id,
         },
       });
       this.setState({ chatRoomUserList: result.data.chatRoomListByMemberId, filterUserList: result.data.chatRoomListByMemberId }, function () {
@@ -218,67 +200,63 @@ class ShowUser extends React.Component {
       });
     }
 
+    async initializeChat(chatRoomID, name, chatRoomType) {
+      const { loginUser } = this.state;
+      const { newUserMessage } = this.state;
+      const tempArray = [];
+      for (let i = 0; i < newUserMessage.length; i++) {
+        if (newUserMessage[i] !== chatRoomID) {
+          tempArray.push(newUserMessage[i]);
+        }
+      }
+      this.setState({
+        newUserMessage: tempArray, chatRoomID, memberID: loginUser.id, receiverName: name, triggerCreateChat: true, chatRoomType, first: false,
+      });
+      this.disable = true;
+    }
+
     filterUser(userName) {
-      const filteredUserList = this.state.chatRoomUserList.filter(user => user.name.toLowerCase().includes(userName));
+      const { chatRoomUserList } = this.state;
+      const filteredUserList = chatRoomUserList.filter(user => user.name.toLowerCase().includes(userName));
       this.setState({ filterUserList: filteredUserList });
     }
 
-    deleteRoom = async (e, chatRoomID, memberID, deleteChatRoom) => {
-      deleteChatRoom({ variables: { chatRoomID, memberID } });
-      e.preventDefault();
+    enableNewMemberSubscription() {
+      const { data } = this.props;
+      const { loginUser } = this.state;
+      data.subscribeToMore({
+        document: CHAT_ROOM_LIST_SUBSCRIPTION,
+        variables: { memberID: loginUser.id },
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const {
+            filterUserList, newUserMessage, chatRoomID, first,
+          } = this.state;
+          const newMember = subscriptionData.data.chatRoomListByMember;
+          if (!isEqual(filterUserList, newMember) || first) {
+            if (newMember[0].chatRoomID !== chatRoomID) {
+              newUserMessage.push(newMember[0].chatRoomID);
+              this.setState({ first: true });
+            }
+          }
+          this.setState({ chatRoomUserList: newMember, filterUserList: newMember, newUserMessage });
+          return false;
+        },
+      });
     }
 
     removeUser(e) {
+      const { onRemoveUser } = this.props;
       e.preventDefault();
-      this.props.onRemoveUser(e);
+      onRemoveUser(e);
     }
 
-    handleHideChatDialog(e) {
+    handleHideChatDialog() {
       this.setState({ showChat: false });
     }
 
-    handleShowChatDialog(e) {
+    handleShowChatDialog() {
       this.setState({ showChat: true });
-    }
-
-    // get count for repetated id
-    getCount(arr) {
-      const a = []; const b = []; let
-        prev;
-      arr.sort();
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i] !== prev) {
-          a.push(arr[i]);
-          b.push(1);
-        }
-        else {
-          b[b.length - 1]++;
-        }
-        prev = arr[i];
-      }
-      return [a, b];
-    }
-
-    onNewMessageArrive(chatRoomID) {
-      const { newUserMessage } = this.state;
-      const m = this.getCount(newUserMessage);
-      const userIdArray = m[0];
-      const userCountArray = m[1];
-      let mainIndex;
-      for (let i = 0; i < userIdArray.length; i++) {
-        if (userIdArray[i] === chatRoomID) {
-          mainIndex = i;
-          break;
-        }
-      }
-      const mainCounter = userCountArray[mainIndex];
-      console.log('Line ---- 286', mainCounter);
-
-      for (let i = 0; i < newUserMessage.length; i++) {
-        if (newUserMessage[i] === chatRoomID) {
-          return (<span className={newUserMessage[i] === chatRoomID ? 'newMessage' : ''}>{mainCounter}</span>);
-        }
-      }
     }
 
     leaveGroup() {
@@ -286,78 +264,79 @@ class ShowUser extends React.Component {
     }
 
     render() {
-      const { data } = this.props;
+      const {
+        data, onLoginFail, hidden, user,
+      } = this.props;
       if (data.loading) { return <div className="loader" />; }
       if (data.error) {
-        this.props.onLoginFail(data.error.graphQLErrors[0].message);
-        console.log('user list');
+        onLoginFail(data.error.graphQLErrors[0].message);
       }
-      const { userList } = this.state;
-      const list = this.state.filterUserList;
-      const loginUserDetails = this.state.loginUser;
-      if (this.props.hidden) {
-        return (
-          <div>
-            <UserList list={userList} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog} />
+      const {
+        userList, filterUserList, loginUser, showChat, triggerCreateChat, chatRoomID, memberID, receiverName, chatRoomType, colors,
+      } = this.state;
+      const list = filterUserList;
+      const loginUserDetails = loginUser;
+      return (
+        <React.Fragment>
+          {hidden && (
+            <div>
+              <UserList list={userList} loginUserDetalis={loginUserDetails} onInitializeChat={this.initializeChat} handleHideChatDialog={this.handleHideChatDialog} handleShowChatDialog={this.handleShowChatDialog} />
 
-            {this.state.showChat && (
-            <div className="row raw">
-              <div className="display-user col-md-4 col-lg-3">
-                <div className="user-title">
-                  <p className="float-left" style={{ marginBottom: 0 }}>
-Welcome
-                    {this.props.user}
-                  </p>
-                  <button style={{ position: 'relative', bottom: '3px' }} className="btn btn-outline-primary float-right btn-sm" onClick={e => this.removeUser(e)}>Log out</button>
-                </div>
+              {showChat && (
+              <div className="row raw">
+                <div className="display-user col-md-4 col-lg-3">
+                  <div className="user-title">
+                    <p className="float-left" style={{ marginBottom: 0 }}>
+                    Welcome
+                      {' '}
+                      {user}
+                    </p>
+                    <button type="button" style={{ position: 'relative', bottom: '3px' }} className="btn btn-outline-primary float-right btn-sm" onClick={e => this.removeUser(e)}>Log out</button>
+                  </div>
 
-                <SearchUser onFilterUser={this.filterUser} />
+                  <SearchUser onFilterUser={this.filterUser} />
 
-                <div className="user-list">
-                  <Scrollbars>
-                    {list.map((user, i) => (
-                      <ul className="list ripple" key={i}>
-                              <li className={`clearfix ${user.name === this.state.receiverName ? 'user-name-active' : ''}`}>
-                                <div className="about">
-                                  <div>
-                                        <ProfileUser userName={user.name} />
-                                        <div className="name " key={user.id} onClick={() => this.initializeChat(user.chatRoomID, user.name, user.chatRoomType)}>
-                                          <p style={{ marginBottom: 0 }}>
-                                                {user.name}
-                                                {' '}
-                                                {this.onNewMessageArrive(user.chatRoomID)}
-                                              </p>
-                                          {user.chatRoomType === 'GROUP' ? (
-                                                <p style={{ marginBottom: '0', fontSize: '13px', color: '#bfbfbf' }}>
-                                                    {user.totalMember}
-                                                    {' '}
+                  <div className="user-list">
+                    <Scrollbars>
+                      {list.map((users, i) => (
+                        <ul className="list ripple" key={users.chatRoomID}>
+                          <li className={`clearfix ${users.name === receiverName ? 'user-name-active' : ''}`}>
+                            <div className="about">
+                              <div>
+                                <ProfileUser userName={users.name} changeColor={colors[i % colors.length]} />
+                                <div className="name " key={user.id} onClick={() => this.initializeChat(users.chatRoomID, users.name, users.chatRoomType)} aria-hidden="true">
+                                  <p style={{ marginBottom: 0 }}>
+                                    {users.name}
+                                    {this.onNewMessageArrive(users.chatRoomID)}
+                                  </p>
+                                  {users.chatRoomType === 'GROUP' ? (
+                                    <p style={{ marginBottom: '0', fontSize: '13px', color: '#bfbfbf' }}>
+                                      {users.totalMember}
+                                      {' '}
 Members
-                                                  </p>
-                                              ) : null}
-                                        </div>
-
-                                      </div>
+                                    </p>
+                                  ) : null}
                                 </div>
-                              </li>
-                              <Mutation mutation={DELETE_CHAT_ROOM}>
-                                {deleteChatRoom => (
-                                  <button className="del-icon btn btn-outline-danger btn-sm" onClick={e => this.deleteRoom(e, user.chatRoomID, this.state.loginUser.id, deleteChatRoom)}><i className="fas fa-trash-alt" /></button>
-                                )}
-                              </Mutation>
-                            </ul>
-
-                    ))}
-                  </Scrollbars>
+                              </div>
+                            </div>
+                          </li>
+                          <Mutation mutation={DELETE_CHAT_ROOM}>
+                            {deleteChatRoom => (
+                              <button type="button" className="del-icon btn btn-outline-danger btn-sm" onClick={e => this.deleteRoom(e, users.chatRoomID, loginUser.id, deleteChatRoom)}><i className="fas fa-trash-alt" /></button>
+                            )}
+                          </Mutation>
+                        </ul>
+                      ))}
+                    </Scrollbars>
+                  </div>
                 </div>
-
+                {triggerCreateChat && <CreateChat list={userList} chatRoomId={chatRoomID} memberId={memberID} receiverName={receiverName} chatRoomType={chatRoomType} leaveGroup={this.leaveGroup} />}
               </div>
-              {this.state.triggerCreateChat && <CreateChat list={userList} chatRoomID={this.state.chatRoomID} memberID={this.state.memberID} receiverName={this.state.receiverName} chatRoomType={this.state.chatRoomType} leaveGroup={this.leaveGroup} />}
+              )}
             </div>
-            )}
-
-          </div>
-        );
-      }
+          )}
+        </React.Fragment>
+      );
     }
 }
 
@@ -365,3 +344,21 @@ export default compose(
   graphql(DELETE_CHAT_ROOM, { name: 'deleteChat' }),
   graphql(USER_LOGIN, { options: props => ({ variables: { name: props.user } }) }), withApollo,
 )(ShowUser);
+
+ShowUser.propTypes = {
+  data: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.object, PropTypes.array]),
+  client: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.object, PropTypes.array]),
+  onRemoveUser: PropTypes.func,
+  user: PropTypes.string,
+  onLoginFail: PropTypes.func,
+  hidden: PropTypes.bool,
+};
+
+ShowUser.defaultProps = {
+  data: PropTypes.object,
+  client: PropTypes.object,
+  onRemoveUser: PropTypes.func,
+  user: PropTypes.string,
+  onLoginFail: PropTypes.func,
+  hidden: PropTypes.bool,
+};

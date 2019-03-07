@@ -1,9 +1,10 @@
 import React from 'react';
-import './searchuser.css';
+import PropTypes from 'prop-types';
 
 class SearchUser extends React.Component {
   handleUserName(e) {
-    this.props.onFilterUser(e.target.value);
+    const { onFilterUser } = this.props;
+    onFilterUser(e.target.value);
   }
 
   render() {
@@ -14,3 +15,11 @@ class SearchUser extends React.Component {
 }
 
 export default SearchUser;
+
+SearchUser.propTypes = {
+  onFilterUser: PropTypes.func,
+};
+
+SearchUser.defaultProps = {
+  onFilterUser: PropTypes.func,
+};

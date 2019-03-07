@@ -1,22 +1,23 @@
 import React from 'react';
-import './popup.css';
+import PropTypes from 'prop-types';
 
 class Popup extends React.Component {
   closePopup(e) {
-    this.props.onClosePopup(e);
+    const { onClosePopup } = this.props;
+    onClosePopup(e);
   }
 
   render() {
-    console.log('Line ---- 10', this.props.errorMessage);
+    const { errorMessage } = this.props;
     return (
       <div className="popup">
         <div className="popup_inner">
           <div>
             <h4 style={{ float: 'left' }}>Opps!!</h4>
-            <div className="close" onClick={e => this.closePopup(e)}>&times;</div>
+            <div className="close" onClick={e => this.closePopup(e)} aria-hidden="true">&times;</div>
           </div>
           <div className="popup_content">
-            {this.props.errorMessage === '' ? 'User alerady exists!!' : this.props.errorMessage}
+            {errorMessage === '' ? 'User alerady exists!!' : errorMessage}
           </div>
         </div>
       </div>
@@ -25,3 +26,13 @@ class Popup extends React.Component {
 }
 
 export default Popup;
+
+Popup.propTypes = {
+  errorMessage: PropTypes.string,
+  onClosePopup: PropTypes.func,
+};
+
+Popup.defaultProps = {
+  errorMessage: PropTypes.string,
+  onClosePopup: PropTypes.func,
+};

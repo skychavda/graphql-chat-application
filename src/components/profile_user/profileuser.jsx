@@ -1,23 +1,14 @@
 import React from 'react';
-import './profileuser.css';
-
-let i = 0;
+import PropTypes from 'prop-types';
 
 class ProfileUser extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      colors: ['#bccad6', '#8d9db6', '#667292', '#f1e3dd', '#cfe0e8', '#b7d7e8', '#87bdd8', '#daebe8'],
-    };
-  }
-
   componentDidMount() {
     this.extractFirstName();
-    this.getColor();
   }
 
   extractFirstName() {
-    const data = this.props.userName;
+    const { userName } = this.props;
+    const data = userName;
     let firstName;
     if (data === null) {
       firstName = null;
@@ -26,25 +17,13 @@ class ProfileUser extends React.Component {
       firstName = data.charAt(0);
     }
 
-    return firstName;
-  }
-
-  getColor() {
-    const { colors } = this.state;
-    while (i !== 8) {
-      const element = colors[i];
-      i++;
-      if (i === 7) {
-        i = 0;
-      }
-      return element;
-    }
+    return firstName.toUpperCase();
   }
 
   render() {
+    const { changeColor } = this.props;
     return (
-      <div id="profileImage" style={{ backgroundColor: this.getColor() }}>
-        {' '}
+      <div id="profileImage" style={{ backgroundColor: changeColor }}>
         {this.extractFirstName()}
       </div>
     );
@@ -52,3 +31,13 @@ class ProfileUser extends React.Component {
 }
 
 export default ProfileUser;
+
+ProfileUser.propTypes = {
+  userName: PropTypes.string,
+  changeColor: PropTypes.string,
+};
+
+ProfileUser.defaultProps = {
+  userName: PropTypes.string,
+  changeColor: PropTypes.string,
+};

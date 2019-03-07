@@ -8,6 +8,7 @@
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.12.4",
+    "node-sass": "^4.11.0",
     "react-scripts": "1.1.1"
   },
   "dependencies": {
@@ -28,11 +29,13 @@
     "universal-cookie": "^3.0.7"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "react-scripts start && npm run watch:sass",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .jsx --ext .js",
-    "lint-fix": "eslint --fix src --ext .jsx --ext .js"
+    "lint-fix": "eslint --fix src --ext .jsx --ext .js",
+    "watch:sass": "npm run build:sass && npm run build:sass -- -w",
+    "build:sass": "node-sass -r --output-style compressed src/stylesheets/main.scss -o src/stylesheets/"
   }
 }

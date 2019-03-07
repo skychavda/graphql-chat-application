@@ -86,21 +86,6 @@ class App extends Component {
     });
   }
 
-  async enterUser(e, joinUser) {
-    if (e.key === 'Enter') {
-      if (e.target.value === '') {
-        this.setState({ error: 'error' });
-      }
-      else {
-        joinUser({ variables: { newUser: e.target.value } });
-        this.setState({ error: 'none' });
-        this.setState({ user: e.target.value, display: 'show', triggerShowUser: true });
-        cookies.set('loginUser', e.target.value);
-        e.preventDefault();
-      }
-    }
-  }
-
   async newUser(e, newUser) {
     const { userName } = this.state;
     const { firstName } = this.state;
@@ -115,7 +100,8 @@ class App extends Component {
       },
     });
     if (result.data.newUser.id === '0') {
-      this.setState({ popupShow: !this.state.popupShow });
+      const { popupShow } = this.state;
+      this.setState({ popupShow: !popupShow });
     }
     else {
       cookies.set('loginUser', userName);
@@ -127,13 +113,17 @@ class App extends Component {
 
   async login(e) {
     if (e.key === 'Enter') {
-      const { userName } = this.state;
-      cookies.set('loginUser', userName);
-      console.log('Line ---- 108', userName);
-      this.setState({
-        user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: true, displayContainer: false,
-      });
-      e.preventDefault();
+      if (e.target.value === '') {
+        this.setState({ error: 'error' });
+      }
+      else {
+        const { userName } = this.state;
+        cookies.set('loginUser', userName);
+        this.setState({
+          user: userName, displayLogin: 'show', triggerShowUser: true, displayShowUser: true, displayContainer: false, error: 'none',
+        });
+        e.preventDefault();
+      }
     }
   }
 
@@ -170,13 +160,15 @@ class App extends Component {
   }
 
   render() {
-    const { user, errorMessage } = this.state;
+    const {
+      user, errorMessage, popupShow, displayContainer, displaySignup, displayLogin, triggerShowUser, displayShowUser, error,
+    } = this.state;
     return (
       <div className="main-div-chat">
-        {this.state.popupShow && <Popup onClosePopup={this.closePopup} errorMessage={errorMessage} />}
-        {this.state.displayContainer && (
+        {popupShow && <Popup onClosePopup={this.closePopup} errorMessage={errorMessage} />}
+        {displayContainer && (
         <div className="container-login100 ">
-          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${this.state.displaySignup === 'show' ? '' : 'hidden'}`}>
+          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${displaySignup === 'show' ? '' : 'hidden'}`}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Welcome to chat application
@@ -217,10 +209,8 @@ class App extends Component {
                   <div className="login100-form-bgbtn" />
                   <Mutation mutation={NEW_USER}>
                     {newUser => (
-                      <button className="login100-form-btn" onClick={e => this.newUser(e, newUser)}>
+                      <button type="button" className="login100-form-btn" onClick={e => this.newUser(e, newUser)}>
                         Join Chat
-
-                        {' '}
                       </button>
                     )}
                   </Mutation>
@@ -230,31 +220,31 @@ class App extends Component {
               {/* <h6 onClick={this.alreadyMember}>Login</h6> */}
             </div>
           </div>
-          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${this.state.displayLogin === 'hidden' ? '' : 'hidden'}`}>
+          <div className={`wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54 ${displayLogin === 'hidden' ? '' : 'hidden'}`}>
             <div className="login100-form validate-form">
               <span className="login100-form-title p-b-49">
                 Login
               </span>
 
-              <div className="wrap-input100 validate-input m-b-23">
+              <div className={`${error}` === 'none' ? 'wrap-input100 validate-input m-b-23' : 'wrap-input100 validate-input m-b-23 wrap-input100-error'}>
                 <input className="input100" type="text" placeholder="Type your username" onChange={e => this.handleUserName(e)} onKeyPress={e => this.login(e)} />
-                <span className="focus-input100" />
+                <span className={`${error}` === 'none' ? 'focus-input100' : 'focus-input100 focus-input100-error'} />
               </div>
 
               <div className="container-login100-form-btn">
                 <div className="wrap-login100-form-btn">
                   <div className="login100-form-bgbtn" />
-                  <button className="login100-form-btn" onClick={e => this.login(e)}>
+                  <button type="button" className="login100-form-btn" onClick={e => this.login(e)}>
                     Login
                   </button>
                 </div>
               </div>
-              <h6 style={{ cursor: 'pointer' }} onClick={this.handleNotAMember}>Not a member?</h6>
+              <h6 style={{ cursor: 'pointer' }} onClick={this.handleNotAMember} aria-hidden="true">Not a member?</h6>
             </div>
           </div>
         </div>
         )}
-        {this.state.triggerShowUser && <ShowUser user={user} hidden={this.state.displayShowUser} onRemoveUser={this.removeUser} onLoginFail={this.loginFail} />}
+        {triggerShowUser && <ShowUser user={user} hidden={displayShowUser} onRemoveUser={this.removeUser} onLoginFail={this.loginFail} />}
       </div>
     );
   }
